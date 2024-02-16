@@ -1,0 +1,10 @@
+Package: fullhouse
+Title: Package for Estimating Talent and Performance
+Version: 0.1.0
+Authors@R: 
+    person("Daniel", "Eck", email = "dje13@illinois.edu", role = c("aut", "cre"))
+Description: This package provides functions for estimating talent and performance based on non-parametric methods. It includes functions for computing optimal values, estimating talent values, and performing relevant analyses.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2

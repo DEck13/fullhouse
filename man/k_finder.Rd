@@ -9,10 +9,10 @@ k_finder(x, stab = 1e-04)
 \arguments{
 \item{x}{A numeric vector representing the input data}
 
-\item{stab}{A numeric value representing the stability parameter. Default is 0.0001.}
+\item{stab}{A numeric value representing the stability parameter}
 }
 \value{
-A numeric vector containing the optimal value of k, along with auxiliary values K1 and K2.
+A numeric vector containing the optimal value of k, along with values K1 and K2
 }
 \description{
 This function finds the optimal value of k based on input data

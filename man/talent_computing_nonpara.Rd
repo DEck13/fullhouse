@@ -4,19 +4,19 @@
 \alias{talent_computing_nonpara}
 \title{talent_computing_nonpara Function}
 \usage{
-talent_computing_nonpara(ystar, data, npop, alpha = 1.16)
+talent_computing_nonpara(ystar, y, npop, alpha = 1.16)
 }
 \arguments{
 \item{ystar}{A numeric value representing an additional parameter for talent estimation.}
 
-\item{data}{A data frame containing the input data.}
+\item{y}{A numeric vector representing the observed statistic under study. This vector will be arranged from highest to lowest.}
 
 \item{npop}{A numeric value representing the population size.}
 
 \item{alpha}{A numeric value representing the shape parameter of the Pareto distribution. Default is 1.16.}
 }
 \value{
-A data frame containing estimated talent values based on the input data.
+A vector containing estimated talent values based on the inputs.
 }
 \description{
 This function estimates underlying talent values using a non-parametric method.
@@ -24,7 +24,7 @@ This function estimates underlying talent values using a non-parametric method.
 \details{
 The talent_computing_nonpara function estimates underlying talent values using a non-parametric approach based on the input data.
 
-It computes talent values for the input data \code{data$hpi} using the Ftilde and Aptitude_nonpara functions.
+It computes talent values for the input vector \code{y} using the Ftilde and aptitude_nonpara functions.
 The parameter \code{ystar} is an additional parameter used in talent estimation.
 }
 \keyword{Pareto}

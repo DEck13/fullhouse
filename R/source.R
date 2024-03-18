@@ -131,6 +131,7 @@ aptitude_nonpara = function(p, alpha = 1.16, npop){
 #' @examples
 #'
 ##
+
 k_finder = function(x, stab = 0.0001) {
   # obtain initial quantities for linear approximation
   Y = sort(as.matrix(x))
@@ -215,6 +216,7 @@ k_finder = function(x, stab = 0.0001) {
   c(k, K1, K2)
 
 }
+
 
 
 #' compute_ystarstar Function

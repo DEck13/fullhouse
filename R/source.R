@@ -131,90 +131,61 @@ aptitude_nonpara = function(p, alpha = 1.16, npop){
 #' @examples
 #'
 ##
-
-k_finder = function(x, stab = 0.0001) {
-  # obtain initial quantities for linear approximation
-  Y = sort(as.matrix(x))
-  n = length(Y)
-  Y[n] = Y[n] + stab # for stability
-  pi = 1 - (n:1 - 1/3)/(n + 1/3)
-  W = log(pi/(1-pi))
-  K1 = max(5, floor(1.3*sqrt(n)))
-  K2 = 2*floor(log10(n)*sqrt(n))
-
-  try({
-    k_selector = do.call(rbind, mclapply(K1:min(c(K1+500,K2,n)), function(k){
-
-      Ytil = Y - median(Y)
-      Ztil = tail(Ytil, k)
-      M1k = 1/(k-1) * sum( log(Ztil[2:k]/Ztil[1]) )
-      M2k = 1/(k-1) * sum( log(Ztil[2:k]/Ztil[1])^2 )
-      ck = M1k + 1 - 0.5*(1 - M1k^2/M2k)^{-1}
-      fck = ((-n*log(pi))^{-ck} - 1)/ck
-
-      Sigma = matrix(0, k, k)
-      for(i in 1:k){
-        for(j in 1:i){
-          Sigma[i,j] = i^{-ck-1} * j^{-ck}
-        }
-      }
-      for(j in 1:k){
-        for(i in 1:(j-1)){
-          Sigma[i,j] = j^{-ck-1} * i^{-ck}
-        }
-      }
-
-      rotate = function(x) t(apply(x, 2, rev))
-      Sigma = rotate(rotate(Sigma))
-      eig = eigen(Sigma)
-      C = eig$vec %*% diag(1/sqrt(eig$val)) %*% t(eig$vec)
-      Zk = C %*% tail(Y, k)
-      Xk = cbind(1, tail(fck, k))
-      Wk =  C %*% Xk
-      # try linear and quadratic model
-      m1 = lm(tail(Y, k) ~ tail(fck, k))
-      m2 = lm(tail(Y, k) ~ tail(fck, k) + I(tail(fck, k)^2))
-      m3 = lm(Zk ~ -1 + Wk)
-      delta.sq = summary(m3)$sigma^2
-      Tk = coef(m3)[2] / summary(m3)$sigma
-
-      kappa.sq = solve(crossprod(Wk))[2,2]
-      kappa = sqrt(kappa.sq)
-      I0 = c(kappa * qt(0.25, df = k - 2, ncp = 1/kappa),
-             kappa * qt(0.75, df = k - 2, ncp = 1/kappa))
-      I1 = c(kappa * qt(0.05, df = k - 2, ncp = 1/kappa),
-             kappa * qt(0.95, df = k - 2, ncp = 1/kappa))
-      I0int = ifelse(I0[1] <= Tk && Tk <= I0[2], 1, 0)
-      I1int = ifelse(I1[1] <= Tk && Tk <= I1[2], 1, 0)
-      c(k, Tk, I0int, I1int, summary(m1)$adj.r.squared,
-        summary(m2)$adj.r.squared)
-
-    }))
-
-    #k = k_selector[max(which(k_selector[, 3] == 1)), 1]
-    #k = k_selector[which.max(k_selector[, 5]), 1]
-    k_selector = as.data.frame(k_selector)
-    colnames(k_selector) = c("k", "Tk", "I0", "I1", "R.sq", "Rquad.sq")
-    k_selector_I0 = k_selector %>% filter(I0 == 1)
-    a = which.max(k_selector_I0$R.sq)
-    b = which.max(k_selector_I0$Rquad.sq)
-    ind = which.max(c(k_selector_I0[a, ]$R.sq,
-                      k_selector_I0[b, ]$Rquad.sq))
-    k = k_selector_I0[c(a,b)[ind] , 1]
-    #if(diff(Y)[n-1] > cutoff){
-    #  k = max(k_selector_I0$k)
-    #  if(k < 0) k = K2
-    #}
-
-  }, silent = TRUE)
-
-  #if(length(k) == 0) k = round(mean(K1, K2))
-  #if(is.na(k)) k = round(mean(K1, K2))
-  #if(k == 0) k = round(mean(K1, K2))
-  #if(k >= n) k = K2
-
-  c(k, K1, K2)
-
+ 
+library(dplyr) 
+k_finder_optimized <- function(x, stab = 0.0001) {
+  Y <- sort(as.matrix(x))
+  n <- length(Y)
+  Y[n] <- Y[n] + stab
+  
+  pi <- 1 - (n:1 - 1/3)/(n + 1/3)
+  W <- log(pi/(1-pi))
+  K1 <- max(5, floor(1.3 * sqrt(n)))
+  K2 <- 2 * floor(log10(n) * sqrt(n))
+  
+  k_selector <- mclapply(K1:min(c(K1 + 500, K2, n)), function(k) {
+    Ytil <- Y - median(Y)
+    Ztil <- tail(Ytil, k)
+    M1k <- 1/(k - 1) * sum(log(Ztil[2:k]/Ztil[1]))
+    M2k <- 1/(k - 1) * sum(log(Ztil[2:k]/Ztil[1])^2)
+    ck <- M1k + 1 - 0.5 * (1 - M1k^2/M2k)^{-1}
+    fck <- ((-n * log(pi))^(-ck) - 1)/ck
+    
+    Sigma <- outer(1:k, 1:k, function(i, j) {
+      min(i, j)^(-ck)
+    })
+    Sigma <- t(apply(Sigma, 1, rev))
+    
+    eig <- eigen(Sigma)
+    C <- eig$vec %*% diag(1/sqrt(eig$val)) %*% t(eig$vec)
+    Zk <- C %*% tail(Y, k)
+    Xk <- cbind(1, tail(fck, k))
+    Wk <- C %*% Xk
+    
+    m3 <- lm(Zk ~ -1 + Wk)
+    Tk <- coef(m3)[2] / summary(m3)$sigma
+    
+    kappa <- sqrt(solve(crossprod(Wk))[2,2])
+    I0 <- kappa * qt(c(0.25, 0.75), df = k - 2, ncp = 1/kappa)
+    I1 <- kappa * qt(c(0.05, 0.95), df = k - 2, ncp = 1/kappa)
+    I0int <- as.integer(Tk >= I0[1] & Tk <= I0[2])
+    I1int <- as.integer(Tk >= I1[1] & Tk <= I1[2])
+    
+    c(k, Tk, I0int, I1int, summary(m3)$sigma^2)
+  })
+  
+  k_selector <- do.call(rbind, k_selector)
+  colnames(k_selector) <- c("k", "Tk", "I0", "I1", "delta_sq")
+  
+  k_selector <- as.data.frame(k_selector) %>%
+    filter(I0 == 1) %>%
+    mutate(R.sq = summary(lm(Tk ~ k))$adj.r.squared,
+           Rquad.sq = summary(lm(Tk ~ k + I(k^2)))$adj.r.squared)
+  
+  ind <- which.max(c(k_selector$R.sq, k_selector$Rquad.sq))
+  k <- k_selector[ind, "k"]
+  
+  return(list(k = k, K1 = K1, K2 = K2))
 }
 
 

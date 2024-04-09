@@ -14,7 +14,7 @@
 #'   individual, where 'M' signifies male and 'F' signifies female.
 #'   \item[birthyear]: a numeric vector representing the birth year of the individual
 #'   \item[hpi]: Historical Popularity Index 
-#'   \item[group]: a character vector categorizing individuals into distinct peer 
+#'   \item[centuries]: a character vector categorizing individuals into distinct peer 
 #'   groups based on historical periods or eras. Each group represents a unique era, 
 #'   allowing for the differentiation between notable figures from various time periods.
 #' }

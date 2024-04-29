@@ -133,7 +133,8 @@ aptitude_nonpara = function(p, alpha = 1.16, npop){
 ##
  
 library(dplyr) 
-k_finder_optimized <- function(x, stab = 0.0001) {
+library(parallel)
+k_finder <- function(x, stab = 0.0001) {
   Y <- sort(as.matrix(x))
   n <- length(Y)
   Y[n] <- Y[n] + stab
@@ -143,36 +144,40 @@ k_finder_optimized <- function(x, stab = 0.0001) {
   K1 <- max(5, floor(1.3 * sqrt(n)))
   K2 <- 2 * floor(log10(n) * sqrt(n))
   
-  k_selector <- mclapply(K1:min(c(K1 + 500, K2, n)), function(k) {
-    Ytil <- Y - median(Y)
-    Ztil <- tail(Ytil, k)
-    M1k <- 1/(k - 1) * sum(log(Ztil[2:k]/Ztil[1]))
-    M2k <- 1/(k - 1) * sum(log(Ztil[2:k]/Ztil[1])^2)
-    ck <- M1k + 1 - 0.5 * (1 - M1k^2/M2k)^{-1}
-    fck <- ((-n * log(pi))^(-ck) - 1)/ck
-    
-    Sigma <- outer(1:k, 1:k, function(i, j) {
-      min(i, j)^(-ck)
-    })
-    Sigma <- t(apply(Sigma, 1, rev))
-    
-    eig <- eigen(Sigma)
-    C <- eig$vec %*% diag(1/sqrt(eig$val)) %*% t(eig$vec)
-    Zk <- C %*% tail(Y, k)
-    Xk <- cbind(1, tail(fck, k))
-    Wk <- C %*% Xk
-    
-    m3 <- lm(Zk ~ -1 + Wk)
-    Tk <- coef(m3)[2] / summary(m3)$sigma
-    
-    kappa <- sqrt(solve(crossprod(Wk))[2,2])
-    I0 <- kappa * qt(c(0.25, 0.75), df = k - 2, ncp = 1/kappa)
-    I1 <- kappa * qt(c(0.05, 0.95), df = k - 2, ncp = 1/kappa)
-    I0int <- as.integer(Tk >= I0[1] & Tk <= I0[2])
-    I1int <- as.integer(Tk >= I1[1] & Tk <= I1[2])
-    
-    c(k, Tk, I0int, I1int, summary(m3)$sigma^2)
-  })
+  k_selector <- parLapply(cl = parallel::makeCluster(parallel::detectCores()),
+                          K1:min(c(K1 + 500, K2, n)),
+                          function(k) {
+                            Ytil <- Y - median(Y)
+                            Ztil <- tail(Ytil, k)
+                            M1k <- 1/(k - 1) * sum(log(Ztil[2:k]/Ztil[1]))
+                            M2k <- 1/(k - 1) * sum(log(Ztil[2:k]/Ztil[1])^2)
+                            ck <- M1k + 1 - 0.5 * (1 - M1k^2/M2k)^{-1}
+                            fck <- ((-n * log(pi))^(-ck) - 1)/ck
+                            
+                            Sigma <- outer(1:k, 1:k, function(i, j) {
+                              min(i, j)^(-ck)
+                            })
+                            Sigma <- t(apply(Sigma, 1, rev))
+                            
+                            eig <- eigen(Sigma)
+                            C <- eig$vec %*% diag(1/sqrt(eig$val)) %*% t(eig$vec)
+                            Zk <- C %*% tail(Y, k)
+                            Xk <- cbind(1, tail(fck, k))
+                            Wk <- C %*% Xk
+                            
+                            m3 <- lm(Zk ~ -1 + Wk)
+                            Tk <- coef(m3)[2] / summary(m3)$sigma
+                            
+                            kappa <- sqrt(solve(crossprod(Wk))[2,2])
+                            I0 <- kappa * qt(c(0.25, 0.75), df = k - 2, ncp = 1/kappa)
+                            I1 <- kappa * qt(c(0.05, 0.95), df = k - 2, ncp = 1/kappa)
+                            I0int <- as.integer(Tk >= I0[1] & Tk <= I0[2])
+                            I1int <- as.integer(Tk >= I1[1] & Tk <= I1[2])
+                            
+                            c(k, Tk, I0int, I1int, summary(m3)$sigma^2)
+                          })
+  
+  parallel::stopCluster(parallel::getDefaultCluster())
   
   k_selector <- do.call(rbind, k_selector)
   colnames(k_selector) <- c("k", "Tk", "I0", "I1", "delta_sq")
@@ -213,125 +218,56 @@ k_finder_optimized <- function(x, stab = 0.0001) {
 #'
 #' @examples
 #'
-compute_ystarstar = function(x, k, stab = 0.0001) {
-  Y = sort(as.matrix(x))
-  n = length(Y)
-  Y[n] = Y[n] + stab # for stability
-  pi = 1 - (n:1 - 1/3)/(n + 1/3)
-  X = W = log(pi/(1-pi))
-  ystar = 10; ub = 0.999
-
-  models = list(
-    m1 = lm(tail(Y, k) ~ tail(W, k)),
-    m2 = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2))
+compute_ystarstar <- function(x, k, stab = 0.0001) {
+  Y <- sort(x)
+  n <- length(Y)
+  Y[n] <- Y[n] + stab 
+  pi <- 1 - (n:1 - 1/3)/(n + 1/3)
+  W <- log(pi/(1 - pi))
+  ystar <- ub <- 10
+  
+  Ftilde <- function(y, t, ystar) {
+    sum(ifelse(y <= ystar, 1, 0)) / length(y) - t
+  }
+  
+  compute_ub <- function(model, W) {
+    f <- function(w) max(Y) - predict(model, newdata = data.frame(W = w))
+    flag <- tryCatch({
+      uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W) + 2), tol = 1e-10)$root
+    }, error = function(e) NA)
+    if (!is.na(flag)) 1 / (1 + exp(-flag)) else ub
+  }
+  
+  compute_ystar <- function(model) {
+    g <- function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
+    flag <- tryCatch({
+      uniroot(g, c(0, 100), tol = 1e-10)$root
+    }, error = function(e) NA)
+    if (!is.na(flag)) flag else ystar
+  }
+  
+  models <- list(
+    m1 = lm(Y ~ tail(W, k)),
+    m2 = lm(Y ~ tail(W, k) + I(tail(W, k)^2)),
+    m3 = lm(Y ~ log(tail(W, k))),
+    m4 = lm(Y ~ log(tail(W, k)) + I(log(tail(W, k))^2)),
+    m5 = lm(Y ~ tail(W, k) + I(tail(W, k)^2) + I(tail(W, k)^3))
   )
-
-  models = models[names(sort(sapply(models, BIC)))]
-  selected_model = models[[1]]
-  f = function(w) {
-    max(Y) - predict(selected_model, newdata = data.frame(W = w))
-  }
-  flag = try({
-    ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
-    ub = 1/(1 + exp(-ub_w))
-  }, silent = TRUE)
-
-  if(class(flag) != "try-error"){
-    try({
-      g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
-      bar = uniroot(g, c(0, 100), tol = 1e-10)
-      ystar = bar$root
-    }, silent = TRUE)
-  }
-
-  if(ystar == 10) {
-    selected_model = models[[2]]
-    f = function(w) {
-      max(Y) - predict(selected_model, newdata = data.frame(W = w))
-    }
-    flag = try({
-      ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
-      ub = 1/(1 + exp(-ub_w))
-    }, silent = TRUE)
-
-    if(class(flag) != "try-error"){
-      try({
-        g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
-        bar = uniroot(g, c(0, 100), tol = 1e-10)
-        ystar = bar$root
-      }, silent = TRUE)
-    }
-  }
-
-  models = list(
-    m1 = lm(tail(Y, k) ~ log(tail(W, k))),
-    m2 = lm(tail(Y, k) ~ log(tail(W, k)) + I(log(tail(W, k))^2))
+  
+  sorted_models <- models[order(sapply(models, BIC))]
+  selected_model <- sorted_models[[1]]
+  
+  ub <- compute_ub(selected_model, W)
+  ystar <- compute_ystar(selected_model)
+  
+  out <- list(
+    ystar = ystar,
+    model = selected_model,
+    Y = tail(Y, k),
+    pi = tail(pi, k),
+    W = tail(W, k)
   )
-
-  if(any(BIC(selected_model) > sapply(models, BIC))) {
-    models = models[names(sort(sapply(models, BIC)))]
-    selected_model = models[[1]]
-    f = function(w) {
-      max(Y) - predict(selected_model, newdata = data.frame(W = w))
-    }
-    flag = try({
-      ub_w = uniroot(f, c(max(W)-0.5, max(W)+2), tol = 1e-10)$root
-      ub = 1/(1 + exp(-ub_w))
-    }, silent = TRUE)
-
-    if(class(flag) != "try-error"){
-      try({
-        g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
-        bar = uniroot(g, c(0, 100), tol = 1e-10)
-        ystar = bar$root
-      }, silent = TRUE)
-    }
-    if(ystar == 10) {
-      selected_model = models[[2]]
-      f = function(w) {
-        max(Y) - predict(selected_model, newdata = data.frame(W = w))
-      }
-      flag = try({
-        ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
-        ub = 1/(1 + exp(-ub_w))
-      }, silent = TRUE)
-
-      if(class(flag) != "try-error"){
-        try({
-          g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
-          bar = uniroot(g, c(0, 100), tol = 1e-10)
-          ystar = bar$root
-        }, silent = TRUE)
-      }
-    }
-  }
-
-  if(ystar == 10 ) {
-    selected_model = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2) +
-                          I(tail(W, k)^3))
-    f = function(w) {
-      max(Y) - predict(selected_model, newdata = data.frame(W = w))
-    }
-    flag = try({
-      ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
-      ub = 1/(1 + exp(-ub_w))
-    }, silent = TRUE)
-
-    if(class(flag) != "try-error"){
-      try({
-        g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
-        bar = uniroot(g, c(0, 100), tol = 1e-10)
-        ystar = bar$root
-      }, silent = TRUE)
-    }
-  }
-
-  ## output
-  out = list(ystar = ystar,
-             model = selected_model,
-             Y = tail(Y, k),
-             pi = tail(pi, k),
-             W = tail(W, k))
+  
   out
 }
 

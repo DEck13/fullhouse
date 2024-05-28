@@ -50,7 +50,7 @@ Ftilde = function(y, t, ystar){
     j = length(which(ytilde < t))
     (j - 1) / n + (t - ytilde[j]) / (n*(ytilde[j+1] - ytilde[j]))
   }
-
+  better engagement with existing packages. Do not call library inside a .R file. Changes need to be made to either DESCRIPTION or NAMESPACE. Corresponding changes will need to be made to the k_finder code.
 }
 
 #' aptitude_nonpara Function
@@ -83,29 +83,35 @@ Ftilde = function(y, t, ystar){
 ## This function extracts talent values from percentiles
 aptitude_nonpara = function(p, alpha = 1.16, npop){
 
-  # converts order stats to their percentiles
-  order_pbino = function(p = 0, k = 1, n = 1e4){
+  #converts order stats to their percentiles
+  order_pbino <- function(p = 0, k = 1, n = 1e4) {
     pbinom(k - 1, prob = p, size = n, lower.tail = FALSE)
   }
-
-  # converts a vector of order stats
-  # to their percentiles. This vector should be the entire
-  # sample sorted in increasing order
-  p = sort(p) # just in case
-  n = length(p)
-  u = unlist(lapply(1:n, function(j){
+  
+  #converts a vector of order stats
+  #to their percentiles. this vector should be the entire
+  #sample sorted in increasing order
+  p <- sort(p) #just in case
+  n <- length(p)
+  cores <- parallel::detectCores()
+  
+  #parallelize the computation of u
+  u <- unlist(parallel::mclapply(1:n, function(j) {
     order_pbino(p[j], k = j, n = n)
-  }))
-
-  # transforms percentiles from order stats (in increasing order)
-  # to Pareto values corresponding to the general population
-  # of a greater than or equal to size
-  # default alpha is that of the Pareto principle 80-20
-  n = length(u)
-  #if(length(npop) == 1) npop = rep(npop, n)
-  unlist(lapply(1:n, function(j){
-    qPareto(qbeta(u[j], j + npop -n , n + 1 - j), t = 1, alpha = alpha)
-  }))
+  }, mc.cores = cores))
+  
+  #transforms percentiles from order stats (in increasing order)
+  #to pareto values corresponding to the general population
+  #of a greater than or equal to size
+  #default alpha is that of the pareto principle 80-20
+  n <- length(u)
+  
+  #parallelize the computation of latent_talent
+  latent_talent <- unlist(parallel::mclapply(1:n, function(j) {
+    qPareto(qbeta(u[j], j + npop - n, n + 1 - j), t = 1, alpha = alpha)
+  }, mc.cores = cores))
+  
+  latent_talent
 }
 
 #' k_finder Function
@@ -114,7 +120,6 @@ aptitude_nonpara = function(p, alpha = 1.16, npop){
 #'
 #' @param x A numeric vector representing the input data
 #' @param stab A numeric value representing the stability parameter
-#' @param ncores The number of cores to use for parallel implementation.
 #'
 #' @return A numeric vector containing the optimal value of k, along with values K1 and K2
 #'
@@ -132,20 +137,19 @@ aptitude_nonpara = function(p, alpha = 1.16, npop){
 #' @examples
 #'
 ##
+ 
 
-library(dplyr)
-library(parallel)
-k_finder <- function(x, stab = 0.0001, ncores = 1) {
+k_finder <- function(x, stab = 0.0001) {
   Y <- sort(as.matrix(x))
   n <- length(Y)
   Y[n] <- Y[n] + stab
-
+  
   pi <- 1 - (n:1 - 1/3)/(n + 1/3)
   W <- log(pi/(1-pi))
   K1 <- max(5, floor(1.3 * sqrt(n)))
   K2 <- 2 * floor(log10(n) * sqrt(n))
-
-  k_selector <- parLapply(cl = parallel::makeCluster(ncores),
+  
+  k_selector <- parLapply(cl = parallel::makeCluster(parallel::detectCores()),
                           K1:min(c(K1 + 500, K2, n)),
                           function(k) {
                             Ytil <- Y - median(Y)
@@ -154,43 +158,43 @@ k_finder <- function(x, stab = 0.0001, ncores = 1) {
                             M2k <- 1/(k - 1) * sum(log(Ztil[2:k]/Ztil[1])^2)
                             ck <- M1k + 1 - 0.5 * (1 - M1k^2/M2k)^{-1}
                             fck <- ((-n * log(pi))^(-ck) - 1)/ck
-
+                            
                             Sigma <- outer(1:k, 1:k, function(i, j) {
                               min(i, j)^(-ck)
                             })
                             Sigma <- t(apply(Sigma, 1, rev))
-
+                            
                             eig <- eigen(Sigma)
                             C <- eig$vec %*% diag(1/sqrt(eig$val)) %*% t(eig$vec)
                             Zk <- C %*% tail(Y, k)
                             Xk <- cbind(1, tail(fck, k))
                             Wk <- C %*% Xk
-
+                            
                             m3 <- lm(Zk ~ -1 + Wk)
                             Tk <- coef(m3)[2] / summary(m3)$sigma
-
+                            
                             kappa <- sqrt(solve(crossprod(Wk))[2,2])
                             I0 <- kappa * qt(c(0.25, 0.75), df = k - 2, ncp = 1/kappa)
                             I1 <- kappa * qt(c(0.05, 0.95), df = k - 2, ncp = 1/kappa)
                             I0int <- as.integer(Tk >= I0[1] & Tk <= I0[2])
                             I1int <- as.integer(Tk >= I1[1] & Tk <= I1[2])
-
+                            
                             c(k, Tk, I0int, I1int, summary(m3)$sigma^2)
                           })
-
+  
   parallel::stopCluster(parallel::getDefaultCluster())
-
+  
   k_selector <- do.call(rbind, k_selector)
   colnames(k_selector) <- c("k", "Tk", "I0", "I1", "delta_sq")
-
+  
   k_selector <- as.data.frame(k_selector) %>%
     filter(I0 == 1) %>%
     mutate(R.sq = summary(lm(Tk ~ k))$adj.r.squared,
            Rquad.sq = summary(lm(Tk ~ k + I(k^2)))$adj.r.squared)
-
+  
   ind <- which.max(c(k_selector$R.sq, k_selector$Rquad.sq))
   k <- k_selector[ind, "k"]
-
+  
   return(list(k = k, K1 = K1, K2 = K2))
 }
 
@@ -222,15 +226,15 @@ k_finder <- function(x, stab = 0.0001, ncores = 1) {
 compute_ystarstar <- function(x, k, stab = 0.0001) {
   Y <- sort(x)
   n <- length(Y)
-  Y[n] <- Y[n] + stab
+  Y[n] <- Y[n] + stab 
   pi <- 1 - (n:1 - 1/3)/(n + 1/3)
   W <- log(pi/(1 - pi))
   ystar <- ub <- 10
-
+  
   Ftilde <- function(y, t, ystar) {
     sum(ifelse(y <= ystar, 1, 0)) / length(y) - t
   }
-
+  
   compute_ub <- function(model, W) {
     f <- function(w) max(Y) - predict(model, newdata = data.frame(W = w))
     flag <- tryCatch({
@@ -238,7 +242,7 @@ compute_ystarstar <- function(x, k, stab = 0.0001) {
     }, error = function(e) NA)
     if (!is.na(flag)) 1 / (1 + exp(-flag)) else ub
   }
-
+  
   compute_ystar <- function(model) {
     g <- function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
     flag <- tryCatch({
@@ -246,7 +250,7 @@ compute_ystarstar <- function(x, k, stab = 0.0001) {
     }, error = function(e) NA)
     if (!is.na(flag)) flag else ystar
   }
-
+  
   models <- list(
     m1 = lm(Y ~ tail(W, k)),
     m2 = lm(Y ~ tail(W, k) + I(tail(W, k)^2)),
@@ -254,13 +258,13 @@ compute_ystarstar <- function(x, k, stab = 0.0001) {
     m4 = lm(Y ~ log(tail(W, k)) + I(log(tail(W, k))^2)),
     m5 = lm(Y ~ tail(W, k) + I(tail(W, k)^2) + I(tail(W, k)^3))
   )
-
+  
   sorted_models <- models[order(sapply(models, BIC))]
   selected_model <- sorted_models[[1]]
-
+  
   ub <- compute_ub(selected_model, W)
   ystar <- compute_ystar(selected_model)
-
+  
   out <- list(
     ystar = ystar,
     model = selected_model,
@@ -268,7 +272,7 @@ compute_ystarstar <- function(x, k, stab = 0.0001) {
     pi = tail(pi, k),
     W = tail(W, k)
   )
-
+  
   out
 }
 

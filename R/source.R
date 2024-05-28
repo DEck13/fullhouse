@@ -50,7 +50,6 @@ Ftilde = function(y, t, ystar){
     j = length(which(ytilde < t))
     (j - 1) / n + (t - ytilde[j]) / (n*(ytilde[j+1] - ytilde[j]))
   }
-  better engagement with existing packages. Do not call library inside a .R file. Changes need to be made to either DESCRIPTION or NAMESPACE. Corresponding changes will need to be made to the k_finder code.
 }
 
 #' aptitude_nonpara Function
@@ -100,7 +99,7 @@ aptitude_nonpara = function(p, alpha = 1.16, npop){
     order_pbino(p[j], k = j, n = n)
   }, mc.cores = cores))
   
-  #transforms percentiles from order stats (in increasing order)
+  #transforms percentiles from order stats
   #to pareto values corresponding to the general population
   #of a greater than or equal to size
   #default alpha is that of the pareto principle 80-20
@@ -231,11 +230,7 @@ compute_ystarstar <- function(x, k, stab = 0.0001) {
   W <- log(pi/(1 - pi))
   ystar <- ub <- 10
   
-  Ftilde <- function(y, t, ystar) {
-    sum(ifelse(y <= ystar, 1, 0)) / length(y) - t
-  }
-  
-  compute_ub <- function(model, W) {
+  compute_ub <- function(Y, W) {
     f <- function(w) max(Y) - predict(model, newdata = data.frame(W = w))
     flag <- tryCatch({
       uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W) + 2), tol = 1e-10)$root
@@ -243,8 +238,8 @@ compute_ystarstar <- function(x, k, stab = 0.0001) {
     if (!is.na(flag)) 1 / (1 + exp(-flag)) else ub
   }
   
-  compute_ystar <- function(model) {
-    g <- function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
+  compute_ystar <- function(Y, ub) {
+    g <- function(ystar) ub - sum(ifelse(Y <= ystar, 1, 0)) / length(Y)
     flag <- tryCatch({
       uniroot(g, c(0, 100), tol = 1e-10)$root
     }, error = function(e) NA)
@@ -262,8 +257,8 @@ compute_ystarstar <- function(x, k, stab = 0.0001) {
   sorted_models <- models[order(sapply(models, BIC))]
   selected_model <- sorted_models[[1]]
   
-  ub <- compute_ub(selected_model, W)
-  ystar <- compute_ystar(selected_model)
+  ub <- compute_ub(Y, W)
+  ystar <- compute_ystar(Y, ub)
   
   out <- list(
     ystar = ystar,

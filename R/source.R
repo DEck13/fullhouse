@@ -223,11 +223,9 @@ k_finder <- function(x, stab = 0.0001) {
 #'
 #' @examples
 #'
-uu <- function(f, lower, upper, tol = 1e-8, maxiter = 1000L, ...) {
-  f.lower <- f(lower, ...)
-  f.upper <- f(upper, ...)
-  val <- .External2(stats:::C_zeroin2, function(arg) f(arg, ...),
-                    lower, upper, f.lower, f.upper, tol, as.integer(maxiter))
+uu <- function(f, lower, upper, tol = 1e-8, maxiter = 1000L) {
+  val <- .External2(stats:::C_zeroin2, function(arg) f(arg),
+                    lower, upper, f(lower), f(upper), tol, as.integer(maxiter))
   return(val[1])
 }
 

@@ -211,7 +211,8 @@ k_finder <- function(x, stab = 0.0001) {
 #'
 #' @details
 #' The compute_ystarstar function computes the optimal value of ystarstar based on the input vector `x`,
-#' parameter `k`, and stability parameter `stab`
+#' parameter `k`, and stability parameter `stab`.It internally utilizes a simplified root-finding function (`uu`)
+#' for optimization.
 #'
 #' The function performs various linear and quadratic modeling techniques to estimate the optimal value of ystarstar
 #' that maximizes the explained variance in the data
@@ -222,6 +223,14 @@ k_finder <- function(x, stab = 0.0001) {
 #'
 #' @examples
 #'
+uu <- function(f, lower, upper, tol = 1e-8, maxiter = 1000L, ...) {
+  f.lower <- f(lower, ...)
+  f.upper <- f(upper, ...)
+  val <- .External2(stats:::C_zeroin2, function(arg) f(arg, ...),
+                    lower, upper, f.lower, f.upper, tol, as.integer(maxiter))
+  return(val[1])
+}
+
 compute_ystarstar <- function(x, k, stab = 0.0001) {
   Y <- sort(x)
   n <- length(Y)
@@ -233,7 +242,7 @@ compute_ystarstar <- function(x, k, stab = 0.0001) {
   compute_ub <- function(Y, W) {
     f <- function(w) max(Y) - predict(model, newdata = data.frame(W = w))
     flag <- tryCatch({
-      uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W) + 2), tol = 1e-10)$root
+      uu(f, c(mean(c(tail(W, 2)[1], max(W))), max(W) + 2), tol = 1e-10)$root
     }, error = function(e) NA)
     if (!is.na(flag)) 1 / (1 + exp(-flag)) else ub
   }
@@ -241,7 +250,7 @@ compute_ystarstar <- function(x, k, stab = 0.0001) {
   compute_ystar <- function(Y, ub) {
     g <- function(ystar) ub - sum(ifelse(Y <= ystar, 1, 0)) / length(Y)
     flag <- tryCatch({
-      uniroot(g, c(0, 100), tol = 1e-10)$root
+      uu(g, c(0, 100), tol = 1e-10)$root
     }, error = function(e) NA)
     if (!is.na(flag)) flag else ystar
   }

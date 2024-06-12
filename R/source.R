@@ -96,9 +96,9 @@ aptitude_nonpara = function(p, alpha = 1.16, npop, cores = 1){
   n = length(p)
   
   #parallelize the computation of u
-  u = unlist(parallel::mclapply(1:n, function(j) {
+  u <- unlist(lapply(1:n, function(j) {
     order_pbino(p[j], k = j, n = n)
-  }, mc.cores = cores))
+  }))
   
   #transforms percentiles from order stats
 

@@ -96,7 +96,7 @@ aptitude_nonpara = function(p, alpha = 1.16, npop, cores = 1){
   n = length(p)
   
   #parallelize the computation of u
-  u <- unlist(lapply(1:n, function(j) {
+  u <- unlist(mclapply(1:n, function(j) {
     order_pbino(p[j], k = j, n = n)
   }))
   
@@ -106,7 +106,7 @@ aptitude_nonpara = function(p, alpha = 1.16, npop, cores = 1){
   n = length(u)
   
   #parallelize the computation of latent_talent
-  latent_talent <- unlist(lapply(1:n, function(j) {
+  latent_talent <- unlist(mclapply(1:n, function(j) {
     qPareto(qbeta(u[j], j + npop - n, n + 1 - j), t = 1, alpha = alpha)
   }))
   

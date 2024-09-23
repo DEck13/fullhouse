@@ -12,7 +12,7 @@ A tibble with 68650 observations of 5 variables:
 individual, where 'M' signifies male and 'F' signifies female.
 \item\link{birthyear}: a numeric vector representing the birth year of the individual
 \item\link{hpi}: Historical Popularity Index
-\item\link{group}: a character vector categorizing individuals into distinct peer
+\item\link{centuries}: a character vector categorizing individuals into distinct peer
 groups based on historical periods or eras. Each group represents a unique era,
 allowing for the differentiation between notable figures from various time periods.
 }

@@ -2,8 +2,6 @@
 
 export(Ftilde)
 export(aptitude_nonpara)
-export(compute_ystarstar)
 export(k_finder)
 export(talent_computing_nonpara)
-import(dplyr)
-import(parallel)
+export(uu)

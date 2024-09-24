@@ -7,9 +7,9 @@
 \format{
 A tibble with 5481 observations of 2 variables:
 \itemize{
-\item\link{year}: a numeric vector representing the year of a historical event.
+\item year: a numeric vector representing the year of a historical event.
 Negative values may indicate years BCE (Before Common Era)/ Before Christ
-\item\link{cumulativepop}: a numeric vector representing the cumulative population count or
+\item cumulativepop: a numeric vector representing the cumulative population count or
 total number of individuals considered in the specific year
 }
 }

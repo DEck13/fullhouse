@@ -4,7 +4,7 @@
 \alias{aptitude_nonpara}
 \title{aptitude_nonpara Function}
 \usage{
-aptitude_nonpara(p, alpha = 1.16, npop)
+aptitude_nonpara(p, alpha = 1.16, npop, cores = 1)
 }
 \arguments{
 \item{p}{A numeric vector representing percentiles of talent values.}
@@ -12,6 +12,8 @@ aptitude_nonpara(p, alpha = 1.16, npop)
 \item{alpha}{A numeric value representing the shape parameter of the Pareto distribution. Default is 1.16.}
 
 \item{npop}{A numeric value representing the population size.}
+
+\item{cores}{Number of cores to be used for parallel processing. Default is 1.}
 }
 \value{
 A numeric vector of talent values extracted from percentiles.
@@ -28,6 +30,8 @@ Then, it transforms these percentiles to Pareto values corresponding to a genera
 
 The parameter \code{alpha} represents the shape parameter of the Pareto distribution, with a default value of 1.16.
 The parameter \code{npop} represents the population size, which is used in the transformation process.
+In this implementation, the number of cores is set to 1 to ensure the code runs faster by avoiding the overhead
+associated with parallel processing.
 }
 \keyword{percentiles}
 \keyword{talent,}

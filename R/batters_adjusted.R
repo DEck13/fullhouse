@@ -1,24 +1,39 @@
-#' Batters Adjusted Dataset
+#' Era-adjusted Batters Dataset
 #'
-#' A dataset containing adjusted statistics for baseball batters.
+#' A dataset containing era-adjusted statistics for batters.
+#'
+#' @details
+#' These era-adjusted statistics are obtained from Full House Modeling.
+#' This model computes era-adjusted statistics through a principled
+#' balancing of how well a player performed "vs their peers" and the
+#' size of the MLB talent pool. Under this model, great all-time
+#' statistics requires that an MLB player is both better than their
+#' peers and played during a time in which the talent pool is large.
+#' In this way, the model constructs an even playing field that
+#' extends across eras.
 #'
 #' @usage data(batters_adjusted)
-#' @format A data frame with [number_of_rows] rows and [number_of_columns] variables:
+#' @format A data frame with 50950 rows and 15 variables:
 #' \itemize{
-#'   \item[name]:  a character vector containing the name of the player.
-#'   \item[playerID]: The unique ID of the player.
-#'   \item[age]: The age of the player during the season (e.g., integer).
-#'   \item[year]: The season year (e.g., integer).
-#'   \item[PA]: Plate appearances, the total number of times the player has appeared at the plate (e.g., integer).
-#'   \item[AB]: At-bats, the number of official at-bats the player has taken (e.g., integer).
-#'   \item[H]: Hits, the total number of successful hits by the player (e.g., integer).
-#'   \item[HR]: Home runs, the number of home runs hit by the player (e.g., integer).
-#'   \item[BB]: Bases on Balls (Walks), the number of times the player was walked (e.g., integer).
-#'   \item[BA]: Batting Average, calculated as H/AB (e.g., numeric).
-#'   \item[OBP]: On-Base Percentage, calculated as (H + BB + HBP)/(AB + BB + HBP + SF) (e.g., numeric).
-#'   \item[HBP]: Hit by Pitch, the number of times the player was hit by a pitched ball (e.g., integer).
-#'   \item[SF]: Sacrifice Fly, a fly ball that allows a runner to score after the catch, but does not count as an at-bat (e.g., integer).
-#'   \item[ebWAR]: Era-adjusted Wins Above Replacement as computed by Baseball Reference (e.g., numeric).
-#'   \item[efWAR]: Era-adjusted Wins Above Replacement as computed by FanGraphs (e.g., numeric).
+#'   \item name: a character vector containing the name of the player.
+#'   \item playerID: the unique ID of the player.
+#'   \item age: the age of the player during the season (e.g., integer).
+#'   \item year: the season year (e.g., integer).
+#'   \item PA: plate appearances, the total number of times the player has appeared at the plate (e.g., integer).
+#'   \item AB: at-bats, the number of official at-bats the player has taken (e.g., integer).
+#'   \item H: hits, the total number of successful hits by the player (e.g., integer).
+#'   \item HR: home runs, the number of home runs hit by the player (e.g., integer).
+#'   \item BB: bases on balls (Walks), the number of times the player was walked (e.g., integer).
+#'   \item BA: batting average, calculated as H/AB (e.g., numeric).
+#'   \item OBP: on-base percentage, calculated as (H + BB + HBP)/(AB + BB + HBP + SF) (e.g., numeric).
+#'   \item HBP: hit by pitch, the number of times the player was hit by a pitched ball (e.g., integer).
+#'   \item SF: sacrifice fly, a fly ball that allows a runner to score after the catch, but does not count as an at-bat (e.g., integer).
+#'   \item ebWAR: era-adjusted wins above replacement as computed by Baseball Reference (e.g., numeric).
+#'   \item efWAR: era-adjusted wins above replacement as computed by FanGraphs (e.g., numeric).
 #' }
+#' @references
+#' Shen Yan, Adrian Burgos Jr., Christopher Kinson, and Daniel J. Eck (2024). "Comparing baseball players across eras via novel Full House Modeling." Available at: \url{https://arxiv.org/abs/2207.11332}
+#'
+#' Website: \url{https://eckeraadjustment.web.illinois.edu/}
+#'
 "batters_adjusted"

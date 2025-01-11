@@ -1,6 +1,6 @@
 Package: fullhouse
 Title: Package for Estimating Talent and Performance
-Version: 0.1.0
+Version: 1.0
 Authors@R: 
     c(
         person("Daniel", "Eck", email = "dje13@illinois.edu", role = c("aut", "cre")),
@@ -14,4 +14,5 @@ RoxygenNote: 7.3.2
 Depends: R (>= 3.5.0)
 Imports: 
     dplyr,
-    parallel
+    parallel, 
+    Pareto

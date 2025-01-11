@@ -24,8 +24,9 @@ It performs linear and quadratic modeling to evaluate the optimal value of k tha
 The function initializes quantities for linear approximation and then evaluates various values of k within specific ranges.
 It uses a combination of linear and quadratic models to estimate the optimal value of k
 }
-\keyword{approximation}
+\keyword{approximation,}
 \keyword{linear}
 \keyword{modeling,}
-\keyword{optimal}
-\keyword{value,}
+\keyword{optimization,}
+\keyword{order}
+\keyword{statistics}

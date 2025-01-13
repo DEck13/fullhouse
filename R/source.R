@@ -184,21 +184,21 @@ k_finder = function(x, stab = 0.0001) {
         summary(m2)$adj.r.squared)
 
     }))
-    k_selector = as.data.frame(k_selector)
-    colnames(k_selector) = c("k", "Tk", "I0", "I1", "R.sq", "Rquad.sq")
-    # restrict attention to all k values such that Tk in I0
-    # (see Section 5 of Scholz (1995) for details).
-    # pick k that has best "fit" as judged by the maximum
-    # candidate values from the best fitting linear and
-    # quadratic models
-    k_selector_I0 = k_selector %>% filter(I0 == 1)
-    a = which.max(k_selector_I0$R.sq)
-    b = which.max(k_selector_I0$Rquad.sq)
-    ind = which.max(c(k_selector_I0[a, ]$R.sq,
-                      k_selector_I0[b, ]$Rquad.sq))
-    k = k_selector_I0[c(a,b)[ind] , 1]
-
   }, silent = TRUE)
+
+  # restrict attention to all k values such that Tk in I0
+  # (see Section 5 of Scholz (1995) for details).
+  # pick k that has best "fit" as judged by the maximum
+  # candidate values from the best fitting linear and
+  # quadratic models
+  colnames(k_selector) = c("k", "Tk", "I0", "I1", "R.sq", "Rquad.sq")
+  k_selector = as.data.frame(k_selector)
+  k_selector_I0 = k_selector[which(k_selector$I0 == 1), ]
+  a = which.max(k_selector_I0$R.sq)
+  b = which.max(k_selector_I0$Rquad.sq)
+  ind = which.max(c(k_selector_I0[a, ]$R.sq,
+                    k_selector_I0[b, ]$Rquad.sq))
+  k = k_selector_I0[c(a,b)[ind] , 1]
 
   c(k, K1, K2)
 

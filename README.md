@@ -13,4 +13,4 @@ install_github(repo = "DEck13/fullhouse")
 
 ## Vignette 
 
-[Here is a reproducible technical report](https://htmlpreview.github.io/?https://github.com/DEck13/historical-impact-resources/blob/main/pantheon_fullhouse.html) that uses functions from the *fullhouse* R package in an analysis of the impact of historical figures.
+[Here is a reproducible technical report](https://htmlpreview.github.io/?https://github.com/DEck13/historical-impact-resources/blob/main/pantheon_fullhouse.html) that uses functions from the `fullhouse` R package in an analysis of the impact of historical figures.

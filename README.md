@@ -14,3 +14,7 @@ install_github(repo = "DEck13/fullhouse")
 ## Vignette 
 
 [Here is a reproducible technical report](https://htmlpreview.github.io/?https://github.com/DEck13/historical-impact-resources/blob/main/pantheon_fullhouse.html) that uses functions from the `fullhouse` R package in an analysis of the impact of historical figures.
+
+## Era-adjusted baseball statistics
+
+This package includes data sets that contain era-adjusted statistics for baseball players. These statistics are displayed on a [separate website](https://eckeraadjustment.web.illinois.edu/). This website includes additional content about how what era-adjusted baseball are included, how they are calculated, and examples on how they can be used in practice.

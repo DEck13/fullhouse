@@ -27,4 +27,5 @@
 #' Shen Yan, Adrian Burgos Jr., Christopher Kinson, and Daniel J. Eck (2024). "Comparing baseball players across eras via novel Full House Modeling." Available at: \url{https://arxiv.org/abs/2207.11332}
 #'
 #' Website: \url{https://eckeraadjustment.web.illinois.edu/}
-"pitchers_career_adjusted_2024"
+"pitchers_career_adjusted"
+

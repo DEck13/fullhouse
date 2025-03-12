@@ -14,24 +14,25 @@
 #' @usage data(pitchers_adjusted)
 #' @format A data frame with 51340 rows and 15 variables:
 #' \itemize{
-#'   \item playerID: The unique ID of the player.
-#'   \item name:  a character vector containing the name of the player.
-#'   \item age: The age of the player during the season (e.g., integer).
-#'   \item year: The season year (e.g., integer).
-#'   \item PA: career plate appearances, the total number of times the player has appeared at the plate.
-#'   \item AB: career at-bats, the number of official at-bats the player has taken.
-#'   \item H: career hits, the total number of successful hits by the player.
-#'   \item HR: career home runs, the number of home runs hit by the player.
-#'   \item BB: career bases on balls (Walks), the number of times the player was walked.
-#'   \item BA: career batting average, calculated as H/AB.
-#'   \item HBP: career hit by pitch, the number of times the player was hit by a pitched ball.
-#'   \item SF: career sacrifice fly.
-#'   \item OBP: career on-base percentage.
-#'   \item ebWAR: career era-adjusted wins above replacement as computed by Baseball Reference.
-#'   \item efWAR: career era-adjusted wins above replacement as computed by FanGraphs.
+#'   \item name: a character vector containing the name of the player.
+#'   \item playerID: the unique ID of the player.
+#'   \item age: the age of the player during the season (e.g., integer).
+#'   \item year: the season year (e.g., integer).
+#'   \item PA: plate appearances, the total number of times the player has appeared at the plate (e.g., integer).
+#'   \item AB: at-bats, the number of official at-bats the player has taken (e.g., integer).
+#'   \item H: hits, the total number of successful hits by the player (e.g., integer).
+#'   \item HR: home runs, the number of home runs hit by the player (e.g., integer).
+#'   \item BB: bases on balls (Walks), the number of times the player was walked (e.g., integer).
+#'   \item BA: batting average, calculated as H/AB (e.g., numeric).
+#'   \item OBP: on-base percentage, calculated as (H + BB + HBP)/(AB + BB + HBP + SF) (e.g., numeric).
+#'   \item HBP: hit by pitch, the number of times the player was hit by a pitched ball (e.g., integer).
+#'   \item SF: sacrifice fly, a fly ball that allows a runner to score after the catch, but does not count as an at-bat (e.g., integer).
+#'   \item ebWAR: era-adjusted wins above replacement as computed by Baseball Reference (e.g., numeric).
+#'   \item efWAR: era-adjusted wins above replacement as computed by FanGraphs (e.g., numeric).
 #' }
 #' @references
 #' Shen Yan, Adrian Burgos Jr., Christopher Kinson, and Daniel J. Eck (2024). "Comparing baseball players across eras via novel Full House Modeling." Available at: \url{https://arxiv.org/abs/2207.11332}
 #'
 #' Website: \url{https://eckeraadjustment.web.illinois.edu/}
-"batters_season_adjusted_2024"
+"batters_adjusted"
+

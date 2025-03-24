@@ -3,9 +3,9 @@
 \docType{data}
 \name{batters_adjusted}
 \alias{batters_adjusted}
-\title{Era-adjusted Batters Dataset}
+\title{Era-adjusted Batters season Dataset (2024)}
 \format{
-A data frame with 50950 rows and 15 variables:
+A data frame with 51340 rows and 15 variables:
 \itemize{
 \item name: a character vector containing the name of the player.
 \item playerID: the unique ID of the player.
@@ -25,10 +25,10 @@ A data frame with 50950 rows and 15 variables:
 }
 }
 \usage{
-data(batters_adjusted)
+data(pitchers_adjusted)
 }
 \description{
-A dataset containing era-adjusted statistics for batters.
+A dataset containing era-adjusted season statistics for batters up to 2024.
 }
 \details{
 These era-adjusted statistics are obtained from Full House Modeling.

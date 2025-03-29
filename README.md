@@ -8,7 +8,7 @@ You can install the development version of this package from GitHub using `devto
 
 ```r
 #install.packages("devtools")
-install_github(repo = "DEck13/fullhouse")
+devtools::install_github(repo = "DEck13/fullhouse")
 ```
 
 ## Vignette 

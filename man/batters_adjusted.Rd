@@ -41,7 +41,7 @@ In this way, the model constructs an even playing field that
 extends across eras.
 }
 \references{
-Shen Yan, Adrian Burgos Jr., Christopher Kinson, and Daniel J. Eck (2024). "Comparing baseball players across eras via novel Full House Modeling." Available at: \url{https://arxiv.org/abs/2207.11332}
+Shen Yan, Adrian Burgos Jr., Christopher Kinson, and Daniel J. Eck (2025). "Comparing baseball players across eras via novel Full House Modeling." Annals of Applied Statistics, 19(2): 1778-1799. DOI: 10.1214/24-AOAS1992
 
 Website: \url{https://eckeraadjustment.web.illinois.edu/}
 }

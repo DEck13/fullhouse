@@ -1,4 +1,4 @@
-#' Era-adjusted Batters Career Dataset (2024)
+#' Era-adjusted Batters Career Dataset
 #'
 #' A dataset containing era-adjusted career statistics for batters up to 2024.
 #' @details
@@ -11,7 +11,7 @@
 #' In this way, the model constructs an even playing field that
 #' extends across eras.
 #'
-#' @usage data(pitchers_adjusted)
+#' @usage data(batters_career_adjusted)
 #' @format A data frame with 9638 rows and 13 variables:
 #' \itemize{
 #'   \item playerID: The unique ID of the player.

@@ -1,4 +1,4 @@
-#' Era-adjusted Pitchers Career Dataset (2024)
+#' Era-adjusted Pitchers Career Dataset
 #'
 #' A dataset containing era-adjusted season statistics for pitchers up to 2024.
 #' @details

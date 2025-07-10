@@ -12,7 +12,7 @@
 #' extends across eras.
 #'
 #' @usage data(pitchers_adjusted)
-#' @format A data frame with 31502 rows and 10 variables:
+#' @format A data frame with 31501 rows and 10 variables:
 #' \itemize{
 #'   \item playerID: The unique ID of the player.
 #'   \item name:  a character vector containing the name of the player.

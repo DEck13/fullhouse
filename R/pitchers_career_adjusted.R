@@ -24,7 +24,7 @@
 #'   \item efWAR: career era-adjusted wins above replacement as computed by FanGraphs.
 #' }
 #' @references
-#' Shen Yan, Adrian Burgos Jr., Christopher Kinson, and Daniel J. Eck (2025). "Comparing baseball players across eras via novel Full House Modeling." Annals of Applied Statistics, 19(2): 1778-1799. DOI: 10.1214/24-AOAS1992
+#' Shen Yan, Adrian Burgos Jr., Christopher Kinson, and Daniel J. Eck (2025). Comparing baseball players across eras via novel Full House Modeling. Annals of Applied Statistics, 19(2): 1778-1799. DOI: 10.1214/24-AOAS1992
 #'
 #' Website: \url{https://eckeraadjustment.web.illinois.edu/}
 "pitchers_career_adjusted"

@@ -3,9 +3,9 @@
 \docType{data}
 \name{pitchers_career_adjusted}
 \alias{pitchers_career_adjusted}
-\title{Era-adjusted Pitchers Career Dataset (2024)}
+\title{Era-adjusted Pitchers Career Dataset}
 \format{
-A data frame with 6515 rows and 8 variables:
+A data frame with 6365 rows and 8 variables:
 \itemize{
 \item playerID: The unique ID of the player.
 \item name:  a character vector containing the name of the player.
@@ -18,7 +18,7 @@ A data frame with 6515 rows and 8 variables:
 }
 }
 \usage{
-data(pitchers_adjusted)
+data(pitchers_career_adjusted)
 }
 \description{
 A dataset containing era-adjusted career statistics for pitchers up to 2024.
@@ -34,7 +34,7 @@ In this way, the model constructs an even playing field that
 extends across eras.
 }
 \references{
-Shen Yan, Adrian Burgos Jr., Christopher Kinson, and Daniel J. Eck (2025). "Comparing baseball players across eras via novel Full House Modeling." Annals of Applied Statistics, 19(2): 1778-1799. DOI: 10.1214/24-AOAS1992
+Shen Yan, Adrian Burgos Jr., Christopher Kinson, and Daniel J. Eck (2025). Comparing baseball players across eras via novel Full House Modeling. Annals of Applied Statistics, 19(2): 1778-1799. DOI: 10.1214/24-AOAS1992
 
 Website: \url{https://eckeraadjustment.web.illinois.edu/}
 }

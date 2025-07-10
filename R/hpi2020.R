@@ -19,5 +19,4 @@
 #'   allowing for the differentiation between notable figures from various time periods.
 #' }
 #'
-#' @source
 "hpi2020"

@@ -13,5 +13,4 @@
 #'   total number of individuals considered in the specific year
 #' }
 #'
-#' @source
 "eligiblepop"

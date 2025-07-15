@@ -1,0 +1,1718 @@
+---
+title: "The Full House Model v2.1: Era‑Adjusted WAR & Cross‑Era Baseball Rankings"
+subtitle: "Results, player spotlights, and fun digressions"
+description: "Explore Version 2.1 of our era‑adjusted WAR rankings via Full House Modeling: updated all‑time lists, 2022 season deep dives, Hall‑of‑Fame case studies, and comparative analyses with major ranking lists."
+author: "Daniel J. Eck, Shen Yan, Adrian Burgos Jr, and Christopher Kinson"
+date: ""
+output: html_document
+urlcolor: blue
+keywords:
+  - Full House Model
+  - era-adjusted WAR
+  - baseball analytics
+  - cross-era comparisons
+url: "https://eckeraadjustment.web.illinois.edu/era_adjusted_V2.1.html"
+header-includes: |
+  <!-- Open Graph for social previews -->
+  <meta property="og:title" content="Full House Model v2.1: Era‑Adjusted WAR & Cross‑Era Baseball Rankings">
+  <meta property="og:description" content="Version 2.1 of era‑adjusted WAR rankings via Full House Modeling—updated all‑time leaderboards, 2022 season deep dives, Hall‑of‑Fame case studies, and fun digressions.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://eckeraadjustment.web.illinois.edu/era_adjusted_V2.1.html">
+  <!-- Canonical to avoid duplicate‑content penalties -->
+  <link rel="canonical" href="https://eckeraadjustment.web.illinois.edu/era_adjusted_V2.1.html">
+  <!-- Schema.org JSON‑LD for structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Full House Model v2.1: Era‑Adjusted WAR & Cross‑Era Baseball Rankings",
+    "description": "Explore Version 2.1 of our era‑adjusted WAR rankings via Full House Modeling: updated top‑25 lists, 2022 season highlights, and deep dives into historical player cases.",
+    "url": "https://eckeraadjustment.web.illinois.edu/full-house-model-era-adjusted-war-v2.1",
+    "datePublished": "2025-07-15",
+    "dateModified": "2025-07-15",
+    "author": {
+      "@type": "Person",
+      "name": "Daniel J. Eck"
+    },
+    "keywords": [
+      "era-adjusted WAR",
+      "Full House Model",
+      "cross-era comparisons",
+      "baseball analytics",
+      "ebWAR",
+      "efWAR, 
+      "baseball statistics",
+      "greatest baseball players of all time",
+      "best baseball players ever",
+      "talent pool",
+      "WAR baseball""
+    ]
+  }
+  </script>
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+
+We are pleased to release version 2.1 of our [era-adjusted stats](https://eckeraadjustment.web.illinois.edu/), computed via [Full House Modeling](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-19/issue-2/Comparing-baseball-players-across-eras-via-novel-Full-House-Modeling/10.1214/24-AOAS1992.short), for comparing baseball players across eras. This document presents updated all-time rankings and a variety of new findings through the lens of era-adjusted metrics. Although casual and fun in tone, some sections are more technical and may challenge your intuition. It is not intended to be fully digested in one sitting. Here is a list of topics:
+
+- Top 25 rankings by era-adjusted bWAR (ebWAR), era-adjusted fWAR (efWAR), and the average of the two (we will call it eWAR)
+- Top 25 rankings by era-adjusted JAWS
+- Top rankings list of batters by several era-adjusted statistics
+- Top rankings list of pitchers by several era-adjusted statistics
+- A brief look at historic performances from the 2022 baseball season
+- Mike Trout's career
+- Max Scherzer and a comparison with Tom Seaver
+- CC Sabathia's career
+- WAR and its usage in HOF discussions 
+- Luis Tiant's career and HOF case
+- Mark Buehrle's career and HOF case
+- The Jekyll and Hyde Legacy of Bob Feller
+- A comparison with Joe Posnanski's The Baseball 100
+- A comparison with Baseball Egg and the The 100 Greatest lists
+- A comparison with ESPN's top 100 list
+- A commentary on Christina Kahrl's insightful work
+- A comprehensive contextual evaluation of Ted Williams's career
+
+
+We will close with instructions for obtaining our era-adjusted stats, the source code for this document, and a technical primer on Full House Modeling.  
+
+Note that our commentary on the rankings is intentionally minimal. We expand our analysis as we explore each topic, beginning with the 2022 season. This presentation builds upon the structure and goals of [Version 2.0](https://eckeraadjustment.web.illinois.edu/era_adjusted_V2_I.html) of the project. 
+
+Let's begin!
+
+***
+
+
+```{r load_stuff}
+# load R packages
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(Lahman)
+library(fullhouse)
+
+# load data sets from fullhouse package
+data("batters_adjusted")
+data("pitchers_adjusted")
+data("batters_career_adjusted")
+data("pitchers_career_adjusted")
+
+# transform data sets from fullhouse package
+bat_season = batters_adjusted  %>% 
+  select(name, playerID, age, year, PA, AB, H, HR, BB, BA, OBP, HBP, SF, ebWAR, efWAR) %>% 
+  mutate(ABpHR = round(AB/HR,2), 
+         ebWARpPA = round(ebWAR/PA * 650, 2), 
+         efWARpPA = round(efWAR/PA * 650, 2)) %>% 
+  select(name, playerID, age, year, PA, AB, H, HR, BB, BA, OBP, ABpHR, HBP, SF, 
+         ebWAR, efWAR, ebWARpPA, efWARpPA)
+pit_season = pitchers_adjusted %>%  
+  mutate(K9 = round(K/IP * 9,1)) %>% 
+  select(name, playerID, age, year, IP, ER, ERA, K, K9, ebWAR, efWAR) %>% 
+  mutate(ebWAR = round(ebWAR, 2), efWAR = round(efWAR, 2), 
+         ebWARpIP = round(ebWAR/IP * 250, 2), 
+         efWARpIP = round(efWAR/IP * 250, 2))
+bat_career = batters_career_adjusted %>% 
+  dplyr::select(name, playerID, PA, AB, H, HR, BB, BA, OBP, ebWAR, efWAR) %>%
+  mutate(ABpHR = round(AB/HR,2),  
+         ebWARpPA = round(ebWAR/PA * 650, 2), 
+         efWARpPA = round(efWAR/PA * 650, 2)) %>% 
+  dplyr::select(name, playerID, PA, AB, H, HR, BB, BA, OBP, ABpHR, ebWAR, efWAR, 
+         ebWARpPA, efWARpPA)
+pit_career = pitchers_career_adjusted %>% 
+  mutate(K9 = round(K/IP * 9,1)) %>% 
+  select(name, playerID, IP, ER, ERA, K, K9, ebWAR, efWAR) %>% 
+  mutate(ebWARpIP = round(ebWAR/IP * 250, 2), 
+         efWARpIP = round(efWAR/IP * 250, 2))
+
+# combine batting and pitching WAR for Babe Ruth and Shohei Ohtani
+WARcombined = rbind(bat_career %>% select(name, playerID, ebWAR, efWAR), 
+                     pit_career %>% select(name, playerID, ebWAR, efWAR)) 
+index.BR = which(WARcombined$name == "Babe Ruth")
+WARcombined[index.BR[1], 3:4] = WARcombined[index.BR[1], 3:4] + WARcombined[index.BR[2], 3:4]
+WARcombined = WARcombined[-index.BR[2], ]
+index.SO = which(WARcombined$name == "Shohei Ohtani")
+WARcombined[index.SO[1], 3:4] = WARcombined[index.SO[1], 3:4] + WARcombined[index.SO[2], 3:4]
+WARcombined = WARcombined[-index.SO[2], ]
+WARcombined = WARcombined %>% arrange(desc(ebWAR))
+WARcombined = WARcombined %>% mutate(eWAR = round((ebWAR + efWAR)/2,2)) 
+```
+
+
+We now present new top 25 all-time lists according to ebWAR, efWAR, and eWAR (average of ebWAR and efWAR). Top 100 ranking lists by ebWAR and efWAR are on our website.
+
+
+```{r}
+kable(cbind(WARcombined %>% select(name, ebWAR) %>% arrange(desc(ebWAR)) %>% 
+  head(25) %>% mutate(rank = 1:25) %>% select(rank, name, ebWAR),
+WARcombined %>% select(name, efWAR) %>% arrange(desc(efWAR)) %>% 
+  head(25) %>% mutate(rank = 1:25) %>% select(rank, name, efWAR),
+WARcombined %>% select(name, eWAR) %>% arrange(desc(eWAR)) %>% 
+  head(25) %>% mutate(rank = 1:25) %>% select(rank, name, eWAR))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+
+```{r}
+# function to compute WAR7
+WAR7 = function(dat, yr = 7){
+  foo = split(dat, f = as.factor(dat$playerID))
+  do.call(rbind, lapply(foo, FUN = function(xx){
+    n = nrow(xx)
+    y1 = xx$ebWAR
+    y2 = xx$efWAR
+    z1 = z2 = 0
+    if(n <= yr){ 
+      z1 = sum(y1)
+      z2 = sum(y2)      
+    }
+    if(n > yr){
+      z1 = sum(sort(y1, decreasing = TRUE)[1:yr])
+      z2 = sum(sort(y2, decreasing = TRUE)[1:yr])
+    } 
+    c(z1, z2)    
+  }))  
+}
+
+# compute era-adjusted JAWS for batters
+bat_WAR7 = WAR7(bat_season)
+colnames(bat_WAR7) = c("ebWAR7", "efWAR7")
+bat_WAR7 = as.data.frame(bat_WAR7)
+#bat_WAR7 %>% arrange(desc(ebWAR7)) %>% head(50)
+bat_WAR7$playerID = rownames(bat_WAR7)
+dat_cbat_JAWS = bat_career %>% left_join(bat_WAR7)
+dat_cbat_JAWS = dat_cbat_JAWS %>% 
+  mutate(ebJAWS = round((ebWAR*0.5 + ebWAR7*0.5), 2),  
+         efJAWS = round((efWAR*0.5 + efWAR7*0.5), 2))
+#dat_cbat_JAWS %>% dplyr::select(name, playerID, ebWAR, ebWAR7, 
+#                                efWAR, efWAR7, ebJAWS, efJAWS) %>% 
+#  arrange(desc(ebJAWS)) %>% as.data.frame() %>% head(25)
+
+
+# compute era-adjusted JAWS for pitchers
+pit_WAR7 = WAR7(pit_season)
+colnames(pit_WAR7) = c("ebWAR7", "efWAR7")
+pit_WAR7 = as.data.frame(pit_WAR7)
+#pit_WAR7 %>% arrange(desc(ebWAR7)) %>% head(50)
+pit_WAR7$playerID = rownames(pit_WAR7)
+dat_cpit_JAWS = pit_career %>% left_join(pit_WAR7)
+dat_cpit_JAWS = dat_cpit_JAWS %>% 
+  mutate(ebJAWS = round((ebWAR*0.5 + ebWAR7*0.5), 2), 
+         efJAWS = round((efWAR*0.5 + efWAR7*0.5), 2))
+#dat_cpit_JAWS %>% dplyr::select(name, playerID, ebWAR, efWAR, ebWAR7, 
+#                                efWAR7, ebJAWS, efJAWS) %>% 
+#  arrange(desc(ebJAWS)) %>% as.data.frame() %>% head(25)
+
+# compute era-adjusted JAWS for Babe Ruth and Shohei Ohtani
+dat_JAWS = rbind(dat_cbat_JAWS %>% 
+                    filter(!name %in% c("Babe Ruth", "Shohei Ohtani")) %>% 
+                    dplyr::select(name, playerID, ebWAR, efWAR, ebWAR7, 
+                                efWAR7, ebJAWS, efJAWS), 
+                  dat_cpit_JAWS %>% 
+                    filter(!name %in% c("Babe Ruth", "Shohei Ohtani")) %>% 
+                    dplyr::select(name, playerID, ebWAR, efWAR, ebWAR7, 
+                                efWAR7, ebJAWS, efJAWS)) %>%
+  arrange(desc(ebJAWS))
+df = rbind(bat_season %>% filter(name %in% c("Babe Ruth", "Shohei Ohtani")) %>% 
+  dplyr::select(name, playerID, year, ebWAR, efWAR),
+    pit_season %>% filter(name %in% c("Babe Ruth", "Shohei Ohtani")) %>% 
+  dplyr::select(name, playerID, year, ebWAR, efWAR)
+  ) %>%
+  group_by(name, year) %>%
+  summarise(
+    ebWAR = sum(ebWAR, na.rm = TRUE),
+    efWAR = sum(efWAR, na.rm = TRUE)
+  ) %>% 
+  ungroup() %>%
+  group_by(name) %>%
+  # Calculate total sum for all entries
+  mutate(
+    total_ebWAR_all = sum(ebWAR, na.rm = TRUE),
+    total_efWAR_all = sum(efWAR, na.rm = TRUE)
+  ) %>%
+  # Take a copy of the dataframe before slicing
+  mutate(
+    total_ebWAR_all_copy = first(total_ebWAR_all),
+    total_efWAR_all_copy = first(total_efWAR_all)
+  ) %>%
+  # Select the top 7 rows in each group based on ebWAR and efWAR
+  slice_max(order_by = ebWAR, n = 7) %>%
+  # Calculate total sum for top 7 entries
+  summarise(
+    total_ebWAR_top7 = sum(ebWAR, na.rm = TRUE),
+    total_efWAR_top7 = sum(efWAR, na.rm = TRUE),
+    total_ebWAR_all = first(total_ebWAR_all_copy),
+    total_efWAR_all = first(total_efWAR_all_copy)
+  ) %>%
+  ungroup() %>% 
+  rename(ebWAR = total_ebWAR_all, 
+         efWAR = total_efWAR_all, 
+         ebWAR7 = total_ebWAR_top7, 
+         efWAR7 = total_efWAR_top7) %>% 
+   mutate(ebJAWS = round((ebWAR*0.5 + ebWAR7*0.5), 2),  
+         efJAWS = round((efWAR*0.5 + efWAR7*0.5), 2)) %>% 
+  left_join(bat_career %>% dplyr::select(name, playerID)) %>% 
+  dplyr::select(name, playerID, ebWAR, efWAR, ebWAR7, 
+                efWAR7, ebJAWS, efJAWS)
+
+## get era-adjusted JAWS for all players
+dat_JAWS = rbind(dat_JAWS, df) %>% arrange(desc(ebJAWS)) %>% 
+  mutate(eWAR = round((ebWAR + efWAR)/2, 2), 
+         eWAR7 = round((ebWAR7 + efWAR7)/2, 2), 
+         eJAWS = round((ebJAWS + efJAWS)/2, 2))
+#dat_JAWS %>% arrange(desc(eJAWS)) %>% as.data.frame() %>% head(25)
+```
+
+
+We also report a top 25 list of combined hitting and pitching JAWS according to ebWAR, efWAR, and eWAR (average of ebWAR and efWAR). Active players Mike Trout and Justin Verlander make the top 25 career era-adjusted JAWS rankings.
+
+
+```{r}
+kable(cbind(dat_JAWS %>% select(name, ebJAWS) %>% arrange(desc(ebJAWS)) %>% 
+  head(25) %>% mutate(rank = 1:25) %>% select(rank, name, ebJAWS),
+dat_JAWS %>% select(name, efJAWS) %>% arrange(desc(efJAWS)) %>% 
+  head(25) %>% mutate(rank = 1:25) %>% select(rank, name, efJAWS),
+dat_JAWS %>% select(name, eJAWS) %>% arrange(desc(eJAWS)) %>% 
+  head(25) %>% mutate(rank = 1:25) %>% select(rank, name, eJAWS))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+
+We now go through some top 10 lists for career batting categories.
+
+
+### Top 10 batting careers by ebWAR 
+
+```{r}
+kable(bat_career %>%  
+        dplyr::select(name, ebWAR, PA) %>% 
+        arrange(desc(ebWAR)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Top 10 batting careers by efWAR
+
+```{r}
+kable(bat_career %>% 
+        dplyr::select(name, efWAR, PA) %>%         
+        arrange(desc(efWAR)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+### Top 10 ebWAR per 650 PA (minimum 3000 PA)
+
+```{r}
+kable(bat_career %>% 
+        filter(PA >= 3000) %>%      
+        dplyr::select(name, ebWARpPA, PA) %>%         
+        arrange(desc(ebWARpPA)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+### Top 10 efWAR per 650 PA (minimum 3000 PA)
+
+```{r}
+kable(bat_career %>% 
+        filter(PA >= 3000) %>%      
+        dplyr::select(name, efWARpPA, PA) %>%         
+        arrange(desc(efWARpPA)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+### The new 500 home run club
+
+```{r}
+kable(bat_career %>% 
+        filter(HR >= 500) %>%         
+        dplyr::select(name, HR, AB) %>% 
+        arrange(desc(HR))) %>%         
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Top 10 era-adjusted at bats per homerun (minimum 3000 PA) 
+
+```{r}
+kable(bat_career %>% 
+        filter(PA >= 3000) %>% 
+        dplyr::select(name, ABpHR, AB) %>%         
+        arrange(ABpHR) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+### Top 10 era-adjusted batting averages (minimum 3000 PA) 
+
+```{r}
+kable(bat_career %>% 
+        filter(PA >= 3000) %>% 
+        dplyr::select(name, BA, AB) %>% 
+        arrange(desc(BA)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Top 10 era-adjusted on base percentage (minimum 3000 PA) 
+
+```{r}
+kable(bat_career %>% 
+        filter(PA >= 3000) %>% 
+        dplyr::select(name, OBP, PA) %>% 
+        arrange(desc(OBP)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### The new 3000 hits club
+
+```{r}
+kable(bat_career %>% 
+        filter(H >= 3000) %>% 
+        dplyr::select(name, H, AB, BA) %>%         
+        arrange(desc(H))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+Our rankings place more modern players among the greatest all-time than conventional ranking lists. However, our new version is more favorable to old players than our previous version. This is best evidenced by Babe Ruth taking the career home run crown. Babe Ruth’s dominance was in part due to his talent, but was also in part due to him exercising a superior batting strategy that had not existed before. Therefore, Ruth's "vs his peers" stats are slightly distorted, and his era-adjusted stats will also be distorted as a result. Ruth's era-adjusted stats reflect the combination of his talent and his competitive advantage. This competitive advantage does not exist in other contexts. Thus Ruth's era-adjusted home run total is inflated when interpreted as a measure of his talent. Nonetheless, Babe Ruth remains an all-time great player as judged by era-adjusted statistics despite him playing so long ago.
+
+We wanted include a measure of era-adjusted WAR on a rate basis to demonstrate just how great Mike Trout has been. Trout is number 1 all-time in both ebWAR and efWAR per 650 PAs. He's 3rd in OBP, 18th in batting average, and 14th in home run rate. Of course these measures are favorable to Trout since his career has not reached its full decline phase. That being said, through his age 32 season Mike Trout is squarely in the top 25 era-adjusted JAWS rankings for all players (batters and pitchers). Absolutely amazing!
+
+
+We now move to pitching.
+
+### Top 10 pitching careers by ebWAR 
+
+```{r}
+kable(pit_career %>% 
+        dplyr::select(name, ebWAR, IP) %>% 
+        arrange(desc(ebWAR)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Top 10 pitching careers by efWAR
+
+```{r}
+kable(pit_career %>% 
+        dplyr::select(name, efWAR, IP) %>% 
+        arrange(desc(efWAR)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+### Top 10 pitching careers by ebWAR per 250 IP (minimum 3000 IP)
+
+```{r}
+kable(pit_career %>% 
+        filter(IP >= 3000) %>% 
+        dplyr::select(name, ebWARpIP, IP) %>% 
+        arrange(desc(ebWARpIP)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Top 10 pitching careers by efWAR per 250 IP (minimum 3000 IP)
+
+```{r}
+kable(pit_career %>% 
+        filter(IP >= 3000) %>% 
+        dplyr::select(name, efWARpIP, IP) %>%         
+        arrange(desc(efWARpIP)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+### Top 10 pitching careers by ERA (minimum 1500 IP) 
+
+```{r}
+kable(pit_career %>% 
+        filter(IP >= 1500) %>% 
+        dplyr::select(name, ERA, IP) %>%         
+        arrange(ERA) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Top 10 pitching careers by ERA (minimum 3000 IP)
+
+```{r}
+kable(pit_career %>% 
+        filter(IP >= 3000) %>% 
+        dplyr::select(name, ERA, IP) %>% 
+        arrange(ERA) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Top 10 pitching careers by strikeouts 
+
+```{r}
+kable(pit_career %>% 
+        dplyr::select(name, K, IP) %>% 
+        arrange(desc(K)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Top 11 pitching careers by strikeouts per 9 innings (minimum 3000 IP) 
+
+Here we display 11 names so that Walter Johnson is displayed.
+
+```{r}
+kable(pit_career %>% 
+        filter(IP >= 3000) %>% 
+        dplyr::select(name, K9, IP) %>% 
+        arrange(desc(K9)) %>% 
+        head(11)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+### Top 10 pitching careers by innings 
+
+```{r}
+kable(pit_career %>% 
+        dplyr::select(name, IP) %>% 
+        arrange(desc(IP)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+Era-adjusted pitching statistics are dramatically different than the raw statistics. The changes to WAR do not fully encapsulate the scope of the changes that era-adjustment produces. ERA, strikeouts, and innings are all materially different. This difference is due to our method accounting for pitching usage which has evolved over time. Starters used to pitch complete games and they used to belong to rotations that consisted of fewer than five pitchers on average. Taking account of both changes dramatically changes how pitchers are viewed.
+
+Not only has usage changed over time, but pitching itself and hitting tendencies have changed as well. This is important to note especially for strikeouts. Take Walter Johnson for example. Walter Johnson was the premiere strikeout pitcher of his day but he only had a K/9 ratio of 5.3 in his time. This is a reflection of an era in which hitters were insulted to strikeout, pitchers primarily pitched to contact, and several pitches like the slider and cutter either did not exist or were in their infancy. We see that if Walter Johnson were to have his statistics evaluated in a common environment used to compare all pitchers, then his K/9 ratio would be relatively higher. His era-adjusted K/9 ratio of 7.3 ranks 11th all-time (minimum 3000 IP). He also would pitch far fewer innings. Keep in mind that Johnsons's observed increase in K/9 also includes a relatively steep penalty placed on Walter Johnson for playing in a sparsely populated era of baseball. That is a testament to how far Walter Johnson stood above his peers in his own time.
+
+A new finding in this version of our project is that Lefty Grove is the best pitcher all-time by both ebWAR and efWAR on a rate basis (minimum 3000 IP). He also ranks 5th in career ebWAR and 7th in career efWAR. [Lefty Grove is a pitcher who has been slept on](https://www.youtube.com/watch?v=Rb1xX6kUO84&t=34s). Another fun new finding is that Justin Verlander joins the top 10 in career and rate basis ebWAR and efWAR. Verlander could finish in the top 5 in career ebWAR and efWAR if he ends his career strongly. It is also fun to see active pitchers Clayton Kershaw and Max Scherzer populate these era-adjusted ranking lists.
+
+
+
+## The 2022 season
+
+We have added and analyzed the truly historic 2022 season which featured two of the greatest individual seasons of all-time between Shohei Ohtani and Aaron Judge. Ohtani's 2022 season may be the greatest era-adjusted season of all-time while Judge's 2022 season is among the greatest offensive season of all-time. The tables below show the top 10 seasons all-time by era-adjusted ebWAR and efWAR (for everyone and then batters), and the breakdown of Judge's and Ohtani's 2022 seasons. We see that Shohei Ohtani's 2022 season is the best season ever by ebWAR.
+
+
+```{r}
+# get Ruth and Ohtani combined batting and pitching seasons
+df2 = rbind(bat_season %>% filter(name %in% c("Babe Ruth", "Shohei Ohtani")) %>% 
+  dplyr::select(name, playerID, year, ebWAR, efWAR),
+    pit_season %>% filter(name %in% c("Babe Ruth", "Shohei Ohtani")) %>% 
+  dplyr::select(name, playerID, year, ebWAR, efWAR)
+  ) %>%
+  group_by(name, year) %>%
+  summarise(
+    ebWAR = sum(ebWAR, na.rm = TRUE),
+    efWAR = sum(efWAR, na.rm = TRUE)
+  ) %>% 
+  ungroup()
+
+df3 = rbind(bat_season %>% 
+               filter(!name %in% c("Babe Ruth", "Shohei Ohtani")) %>% 
+               dplyr::select(name, year, ebWAR, efWAR), 
+             pit_season %>% 
+               filter(!name %in% c("Babe Ruth", "Shohei Ohtani")) %>% 
+               dplyr::select(name, year, ebWAR, efWAR), 
+             df2) %>% arrange(desc(ebWAR))
+
+kable(cbind(df3 %>% dplyr::select(-efWAR) %>%
+  head(10) %>% mutate(rank = 1:10) %>% 
+    dplyr::select(rank, name, year, ebWAR), 
+  df3 %>% dplyr::select(-ebWAR) %>% arrange(desc(efWAR)) %>%
+  head(10) %>% mutate(rank = 1:10) %>% 
+    dplyr::select(rank, name, year, efWAR))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+
+df4 = rbind(bat_season %>% 
+               filter(!name %in% c("Babe Ruth", "Shohei Ohtani")) %>% 
+               dplyr::select(name, year, ebWAR, efWAR), 
+            df2) %>% arrange(desc(ebWAR))
+
+kable(cbind(df4 %>% dplyr::select(-efWAR) %>%
+  head(10) %>% mutate(rank = 1:10) %>% 
+    dplyr::select(rank, name, year, ebWAR), 
+  df4 %>% dplyr::select(-ebWAR) %>% arrange(desc(efWAR)) %>%
+  head(10) %>% mutate(rank = 1:10) %>% 
+    dplyr::select(rank, name, year, efWAR))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+# Get Judge seasons
+AJSO2022 = rbind(bat_season %>% 
+              filter(name %in% c("Aaron Judge", "Shohei Ohtani"), year == 2022) %>% 
+              dplyr::select(name, year, ebWAR, efWAR), 
+            pit_season %>% 
+              filter(name %in% c("Shohei Ohtani"), year == 2022) %>% 
+              dplyr::select(name, year, ebWAR, efWAR))
+AJSO2022$position = c("OF","DH","SP")
+AJSO2022 = AJSO2022 %>% dplyr::select(name, position, ebWAR, efWAR)
+
+kable(AJSO2022) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+In addition to being the greatest offensive season by both ebWAR and efWAR, Aaron Judge's 2022 era-adjusted home run total is unsurprisingly among the best all-time. 
+
+
+```{r}
+kable(bat_season %>% 
+  dplyr::select(name, year, age, AB, HR) %>% 
+  arrange(desc(HR)) %>% 
+  as.data.frame() %>% 
+  head(20)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+Judge's 2022 season also ranks 12th all-time on home run rate among players with at least 400 era-adjusted at bats (see table below). The following top 20 list shows Ruth's dominance vs his peers and highlights the effects of the steroids era on Bonds's dominance. When compared vs your peers, Ruth dominated his peers by a much larger margin than other players. His dominance is offset by a small talent pool. 
+
+More on Ruth. Babe Ruth revolutionized baseball by prioritizing home run hitting as the MLB livened the baseball. As [stated here](https://www.tandfonline.com/doi/full/10.1080/09332480.2020.1726114), the single season home run record before Babe Ruth was 27 by Ned Williamson in 1884. Babe Ruth broke this record in 1919 when he hit 29 home runs. He subsequently destroyed his own record in the following 1920 season when he hit 54 home runs. The runner up in 1920 finished the season with only 15 home runs. This level of dominance has never been seen before and has never been seen since, and it poses a problem for era-adjustment techniques.
+
+**Babe Ruth’s dominance is in part due to his talent, but is also in part to him exercising a superior batting strategy that had not existed before.** Therefore, Ruth's "vs his peers" stats are slightly distorted, and his era-adjusted stats will also be distorted as a result. Ruth's era-adjusted stats reflect the combination of his talent and his competitive advantage. This competitive advantage does not exist in other contexts. Our method will therefore overestimate Ruth's era-adjusted home run hitting and his era-adjusted WAR since our method does not yet disentangle talent and competitive circumstance. The problem of the Babe Ruth anomaly confounds all era-adjustment techniques. We imagine that Ruth's era-adjusted OBP is also overestimated by our method. The Babe Ruth anomaly challenges all other era-adjustment techniques, and is especially challenging for anyone making interpretations based solely on raw or league adjusted "+" stats and WAR.
+
+
+
+```{r}
+kable(bat_season %>% 
+  filter(AB >= 400) %>%
+  dplyr::select(name, year, age, AB, ABpHR, HR) %>% 
+  arrange(ABpHR) %>% 
+  as.data.frame() %>% head(20)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+
+## Mike Trout
+
+Mike Trout is one of the greatest player in this current generation. The raw unadjusted WAR rankings suggest that it would be very unlikely for Trout to end his career with more WAR than old time great players like Babe Ruth and Ty Cobb. However, our era-adjustment method tells a slightly different story if Trout can stay healthy. Through the 2024 season Mike Trout is ranked 32nd in career ebWAR and 35th in career efWAR. The table below shows Mike Trout’s era-adjusted WAR totals and the 5 players immediately in front of him and behind him.  
+
+
+```{r}
+kable(cbind(WARcombined %>% arrange(desc(ebWAR)) %>% 
+              mutate(rank = 1:nrow(WARcombined)) %>% 
+              select(rank, name, ebWAR) %>% 
+              slice(27:37), 
+            WARcombined %>% arrange(desc(efWAR)) %>% 
+              mutate(rank = 1:nrow(WARcombined)) %>% 
+              select(rank, name, efWAR) %>% 
+              slice(30:40))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+Below we see career trajectories for batters. Only a handful of the game's greatest players have performed at Mike Trout's level through their first 14 seasons. This even sells Trout short, since his first season was not complete and he has missed time with injuries. That being said, Trout’s injuries may catch up to him and he may not stay on his current trajectory of all-time greatness. Either way, Trout's first 14 years have been among the best in baseball history. 
+
+\newpage
+
+```{r}
+bat_season_foo = batters_adjusted %>% 
+  select(name, year, playerID, ebWAR, efWAR) 
+trajectories = bat_season_foo %>% 
+  group_by(playerID) %>% 
+  summarise(playerID = playerID, season = year - min(year) +1,  
+            runebWAR = cumsum(ebWAR), 
+            runefWAR = cumsum(efWAR), 
+            max_season = max(season), 
+            max_runebWAR = max(runebWAR),
+            max_runefWAR = max(runefWAR)) %>% 
+  filter(max_season >= 10, 
+         max_runebWAR >= 50, 
+         max_runefWAR >= 50) %>% 
+  select(-max_season, -max_runefWAR, -max_runebWAR) 
+ 
+trajectories %>% ggplot(aes(x=season, y=runebWAR, group=playerID)) + 
+  geom_line(alpha = 0.20) + 
+  #labs(color = "Legend") +
+  #theme_minimal() + 
+  geom_line(data = trajectories %>% filter(playerID == "troutmi01"), 
+            aes(color = "Mike Trout")) + 
+  geom_line(data = trajectories %>% filter(playerID == "pujolal01"), 
+            aes(color = "Albert Pujols")) + 
+  geom_line(data = trajectories %>% filter(playerID == "aaronha01"), 
+            aes(color = "Hank Aaron")) + 
+  geom_line(data = trajectories %>% filter(playerID == "bondsba01"), 
+            aes(color = "Barry Bonds")) + 
+  geom_line(data = trajectories %>% filter(playerID == "mayswi01"), 
+            aes(color = "Willie Mays")) + 
+  geom_line(data = trajectories %>% filter(playerID == "rodrial01"), 
+            aes(color = "Alex Rodriguez")) +   
+  scale_color_manual(name = "Career",
+    breaks = c("Mike Trout", "Albert Pujols", "Hank Aaron", 
+               "Barry Bonds", "Willie Mays", "Alex Rodriguez"),
+    values =  c("Mike Trout" = "red",
+                "Albert Pujols" = "darkred",
+                "Hank Aaron" = "blue",
+                "Barry Bonds" = "yellow",
+                "Willie Mays" = "orange", 
+                "Alex Rodriguez" = "black")) + 
+  theme_minimal() + 
+  ylab("cumulative ebWAR")
+```
+
+```{r}
+trajectories %>% ggplot(aes(x=season, y=runefWAR, group=playerID)) + 
+  geom_line(alpha = 0.20) + 
+  geom_line(data = trajectories %>% filter(playerID == "troutmi01"), 
+            aes(color = "Mike Trout")) + 
+  geom_line(data = trajectories %>% filter(playerID == "pujolal01"), 
+            aes(color = "Albert Pujols")) + 
+  geom_line(data = trajectories %>% filter(playerID == "aaronha01"), 
+            aes(color = "Hank Aaron")) + 
+  geom_line(data = trajectories %>% filter(playerID == "bondsba01"), 
+            aes(color = "Barry Bonds")) + 
+  geom_line(data = trajectories %>% filter(playerID == "mayswi01"), 
+            aes(color = "Willie Mays")) + 
+  geom_line(data = trajectories %>% filter(playerID == "rodrial01"), 
+            aes(color = "Alex Rodriguez")) +   
+  scale_color_manual(name = "Career",
+    breaks = c("Mike Trout", "Albert Pujols", "Hank Aaron", 
+               "Barry Bonds", "Willie Mays", "Alex Rodriguez"),
+    values =  c("Mike Trout" = "red",
+                "Albert Pujols" = "darkred",
+                "Hank Aaron" = "blue",
+                "Barry Bonds" = "yellow",
+                "Willie Mays" = "orange", 
+                "Alex Rodriguez" = "black")) + 
+  theme_minimal() + 
+  ylab("cumulative efWAR")
+```
+
+A natural historic comparison for Mike Trout is Mickey Mantle. Both players are amazing all-around athletes, complete hitters, and play center field. Even one of Trout’s nicknames, the Millville Meteor, is an homage to Mantle’s nickname, the Commerce Comet. By raw, unadjusted, statistics Mickey Mantle is viewed as one of the greatest talents of all-time. Mike Trout has been better than Mickey Mantle so far by era-adjusted statistics.
+
+**First 14 seasons aggregated:**
+
+```{r}
+# aggregation funtion for batting lines over user-supplied window 
+totals_bat = function(xx){
+  xx %>% summarise(name = unique(name),
+                   PA = sum(PA), 
+                   AB = sum(AB), 
+                   H = sum(H), 
+                   HR = sum(HR),
+                   BB = sum(BB), 
+                   BA = round(H/AB, 3), 
+                   OBP = round(sum(H + BB + sum(HBP))/ 
+                         sum(AB + BB + sum(HBP) + sum(SF)),3),
+                   ABpHR = round(AB/HR, 2), 
+                   ebWAR = sum(ebWAR), 
+                   efWAR = sum(efWAR), 
+                   ebWARpPA = round(ebWAR/PA * 650, 2), 
+                   efWARpPA = round(efWAR/PA * 650, 2))
+}
+
+kable(rbind(totals_bat(bat_season %>% 
+  filter(name == "Mickey Mantle",  year <= 1964)), 
+  totals_bat(bat_season %>% filter(name == "Mike Trout")))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+As it stands right now Mike Trout has been the most productive batter on a rate basis in baseball history according to our era-adjusted versions of WAR. 
+
+
+## Max Scherzer
+
+Max Scherzer is one of this era's greatest pitchers. He is one of a handful of pitchers to win 3 Cy Young awards. Other players with 3 Cy Young awards include Roger Clemens, Randy Johnson, Greg Maddux, Steve Carlton, Tom Seaver, Pedro Martinez, Clayton Kershaw, Justin Verlander, Sandy Koufax, and Jim Palmer. Scherzer's run from 2013-2019 is especially dominant. Over that stretch he collected his Cy Young awards and never fell below fifth in the voting. That being said, his numbers over that stretch [do not leap off of the page](https://www.fangraphs.com/players/max-scherzer/3137/stats?position=P). Sure, his strikeout rates and strike outs per walk ratios are all-time elite, but ERA and most counting totals do not reflect the Cy Young voting when viewed from the lens of baseball history. Take Tom Seaver as an example. From 1969 to 1975 Terrific Tom boasted similar dominance and also collected 3 Cy Young awards. In 1971 Seaver had a 1.76 ERA over 286.1 innings. [Surely his run leaps off the page](https://www.fangraphs.com/players/tom-seaver/1011708/stats?position=P).
+
+Max Scherzer's dominance is punished by his era, a time period with a large MLB eligible talent pool, lower innings totals, and a balance of hitting and pitching that was [tilted in the favor of pitching](https://www.espn.com/mlb/story/_/id/12842711/mlb-hurlers-rise-dominance) which, in this case, led to a crowded field of low ERA totals. Our per season era-adjusted statistics paint a much more favorable comparison of Scherzer’s dominant 7-year run from 2013-2019 to that of Seaver's dominant run from 1969-1975. These players' primes are nearly identical:
+
+```{r}
+totals_pit = function(xx){
+  xx %>% summarise(name = unique(name),
+                   ERA = round(sum(IP * ERA) / sum(IP), 2),
+                   IP = sum(IP), 
+                   K = sum(K), 
+                   K9 = round(K/IP * 9, 1), 
+                   ebWAR = sum(ebWAR), 
+                   efWAR = sum(efWAR), 
+                   ebWARpIP = round(ebWAR/IP * 250, 2), 
+                   efWARpIP = round(efWAR/IP * 250, 2))
+}
+
+kable(rbind(totals_pit(pit_season %>% filter(name == "Max Scherzer") %>% 
+             filter(year >= 2013, year <= 2019)),
+totals_pit(pit_season %>% filter(name == "Tom Seaver") %>% 
+             filter(year >= 1969, year <= 1975)))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+As it currently stands Max Scherzer ranks 12th in career ebWAR and 14th in career efWAR among pitchers and is among elite company: 
+
+```{r}
+kable(cbind(pit_career %>% select(name, ebWAR) %>% 
+              arrange(desc(ebWAR)) %>% 
+              mutate(rank = 1:nrow(pit_career)) %>% 
+              select(rank, name, ebWAR) %>% 
+              slice(7:17), 
+            pit_career %>% select(name, efWAR) %>% 
+              arrange(desc(efWAR)) %>% 
+              mutate(rank = 1:nrow(pit_career)) %>% 
+              select(rank, name, efWAR) %>% 
+              slice(9:19))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+As you see above, similar analyses can point out the dominance of Scherzer's contemporaries: Clayton Kershaw, Justin Verlander, and Zack Greinke. 
+
+
+## CC Sabathia 
+
+CC Sabathia retired in 2019 with 251 wins, over 3000 strikeouts, 62.3 bWAR and 66.5 fWAR. These are great numbers but are somewhat underwhelming in discussions of all-time pitchers in the Hall of Fame. Sabathia fell short of 300 wins and his career bWAR total is tied for 166th all-time. Our era-adjusted statistics are much more favorable to Sabathia's career. He ranks 74th all-time by ebWAR and 64th all-time by efWAR. Below we see that CC Sabathia's era-adjusted career compares favorable to the era-adjusted careers of some solid Hall of Famers from years past: Pete Alexander, Robin Roberts, Fergie Jenkins, Jim Palmer, and Don Sutton. These careers are sorted by ebWAR per 250 innings pitched (see table below). 
+
+Among this group Pete Alexander is currently viewed as an inner circle legend with 373 wins with nearly 120 bWAR and 95.7 fWAR. There is a good chance that if CC Sabathia had been born in the late 1880s and been allowed to play, then we would be viewing Sabathia as one of the key figures in baseball history who would lay the foundation for how to play the game [the right way](https://andscape.com/features/cc-sabathia-on-the-pressure-black-athletes-face-to-play-baseball-the-white-way/).
+
+```{r}
+kable(rbind(totals_pit(pit_season %>% filter(name == "Fergie Jenkins")),
+            totals_pit(pit_season %>% filter(name == "CC Sabathia")),
+            totals_pit(pit_season %>% filter(name == "Robin Roberts")),
+            totals_pit(pit_season %>% filter(name == "Jim Palmer")),
+            totals_pit(pit_season %>% filter(name == "Pete Alexander")),  
+            totals_pit(pit_season %>% filter(name == "Don Sutton"))
+            )) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+
+## WAR and it's usage in HOF discussions
+
+One of the goals of WAR is to provide a framework for people like us to compare players across eras. The following passage is taken directly from the [What is WAR? page on FanGraphs](https://library.fangraphs.com/misc/war/): "The goal of WAR is to provide a holistic metric of player value that allows for comparisons across team, league, year, and **era** and a framework for player evaluation." 
+
+The work in this article moves WAR closer to its goal of providing fair comparisons of players who have played in vastly different eras. This matters when we evaluate a player’s career in historical context. **The HOF players of the old past are beneficiaries of biased performance metrics.** Comparisons based upon "vs your peers" statistics are therefore slanted in favor of old time players—specifically those who performed in the segregated NL/AL. With the Full House Model, this is no more. Here is a look at active players and retired players who are not in the HOF who have era-adjusted bWAR and fWAR values in the top 100 all-time at the time that this was written:
+
+```{r}
+kable(
+cbind(WARcombined %>% mutate(rank = 1:nrow(WARcombined)) %>% 
+  select(rank, name, ebWAR) %>% 
+  filter(name %in% c("Barry Bonds", "Roger Clemens", "Alex Rodriguez", 
+    "Albert Pujols", "Curt Schilling", "Justin Verlander", 
+    "Miguel Cabrera", "Clayton Kershaw", "Carlos Beltrán", "Zack Greinke", 
+    "Max Scherzer", "Mike Trout", "Pete Rose", "Dwight Evans", 
+    "Graig Nettles", "Rafael Palmeiro",
+    "Ichiro Suzuki", "Manny Ramirez", "Lou Whitaker", 
+    "Bobby Grich", "Chase Utley")) %>% 
+  filter(rank < 300), 
+WARcombined %>% arrange(desc(efWAR)) %>% 
+  mutate(rank = 1:nrow(WARcombined)) %>% 
+  select(rank, name, efWAR) %>% 
+  filter(name %in% c("Barry Bonds", "Roger Clemens", "Alex Rodriguez", 
+    "Albert Pujols", "Curt Schilling", "Justin Verlander", 
+    "Miguel Cabrera", "Clayton Kershaw", "Carlos Beltrán", "Zack Greinke", 
+    "Max Scherzer", "Mike Trout", "Pete Rose", "Dwight Evans", 
+    "Graig Nettles", "Rafael Palmeiro",
+    "Ichiro Suzuki", "Manny Ramirez", "Lou Whitaker", 
+    "Bobby Grich", "Chase Utley")) %>% 
+  filter(rank < 300))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+```{r, eval = FALSE}
+WARcombined %>% arrange(desc(efWAR)) %>% 
+  mutate(rank = 1:nrow(WARcombined)) %>% 
+    select(rank, name, efWAR) %>%
+  as.data.frame() %>% slice(1:50)
+
+WARcombined %>% arrange(desc(ebWAR)) %>% 
+  mutate(rank = 1:nrow(WARcombined)) %>% 
+    select(rank, name, ebWAR) %>%
+  as.data.frame() %>% head(100)
+```
+
+
+We realize that some of the names on the above list, namely Barry Bonds who had the greatest career ever by ebWAR and efWAR, are not the most popular of figures in baseball history. But is PED usage and personal foibles worse than Cap Anson who played a [major role in establishing racial segregation](https://en.wikipedia.org/wiki/Cap_Anson)? Our era-adjusted stats can be used to evaluate Bonds and Anson in the same contextual environment after accounting for the quality of their respective talent pools. Below is a direct comparison of Anson's career and Bonds's career through 1998 ([the last year that Bonds may have been clean](https://www.espn.com/mlb/story/_/id/32806209/barry-bonds-roger-clemens-far-less-great-subtract-ped-factor)). It's no comparison.
+
+
+```{r}
+kable(rbind(totals_bat(bat_season %>% filter(name == "Barry Bonds", year <= 1998)),
+            totals_bat(bat_season %>% filter(name == "Cap Anson"))            
+            )) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+Our era-adjusted statistics reveal that Cap Anson is more like Nick Markakis than Barry Bonds through 1998 as far as on-field production is concerned. Morevoer, Ty Cobb, who also is a controversial figure, at least has the on-field production to warrant HOF status. Perhaps Anson would remain in the HOF for having well over 3000 hits, but he is no where near the player that Ty Cobb was or that Barry Bonds was through 1998. Anson is Nick Markakis with more longevity and less plate discipline.
+
+
+```{r}
+kable(rbind(totals_bat(bat_season %>% filter(name == "Cap Anson")),
+            totals_bat(bat_season %>% filter(name == "Nick Markakis")), 
+            totals_bat(bat_season %>% filter(name == "Ty Cobb"))
+            )) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+
+```{r, eval = FALSE}
+kable(rbind(totals_bat(bat_season %>% filter(name == "Adam Jones")),
+            totals_bat(bat_season %>% filter(name == "Ed Delahanty")), 
+            totals_bat(bat_season %>% filter(name == "Dan Brouthers"))
+            )) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+## Luis Tiant
+
+Tiant spent 15 years on the BBWAA ballot and was never particularly close to the 75% voting threshold that was needed for HOF inclusion. He also was not very close to HOF inclusion when his name appeared on the ballot of various Veterans Committees. We would like to revisit Tiant's HOF case here. By ebWAR and efWAR Tiant ranks as the 43rd and 81st best pitcher in history and ranks 149th and 249th overall among both pitchers and hitters by, respectively, ebWAR and efWAR. There are currently 274 former MLB players in the HOF. If we included players based on stats, then Tiant would be in.
+
+```{r, eval = FALSE}
+which(WARcombined$name == "Luis Tiant")
+which( (WARcombined %>% arrange(desc(efWAR)))$name == "Luis Tiant")
+which(pit_career$name == "Luis Tiant")
+which( (pit_career %>% arrange(desc(efWAR)))$name == "Luis Tiant")
+```
+
+Let’s compare Tiant to a small group of currently unquestioned Hall of Famers, Jim Plamer, Whitey Ford, and Bob Feller.Tiant holds up well. He ranks first in ebWAR per 250 innings pitched and is competitive across the board, finishing last in none of the major stats. Add in a few elite peak seasons, and his case looks strong.
+
+
+```{r}
+kable(rbind(
+totals_pit(pit_season %>% filter(name == "Luis Tiant")),
+totals_pit(pit_season %>% filter(name == "Jim Palmer")),
+totals_pit(pit_season %>% filter(name == "Whitey Ford")),
+totals_pit(pit_season %>% filter(name == "Bob Feller"))
+)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+```{r}
+kable(pit_season %>% 
+  filter(name == "Luis Tiant") %>% 
+  filter(ebWAR >= 6) %>% 
+  dplyr::select(-ER, -playerID)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+Additionally, Tiant delivered a stellar World Series performance in 1975 against the 108-win Big Red Machine, going 2–0 with a 3.60 ERA over 25 innings in three starts. While that falls short of Jack Morris’s legendary 1991 2–0 record and 1.17 ERA across 23 innings, including a 10-inning shutout in Game 7. Context matters. No one romanticizes the 94-win 1991 Braves offense the way they do the Big Red Machine. 
+
+### The Big Red Machine
+
+Here we list era-adjusted batting lines for [starters](https://www.baseball-reference.com/teams/CIN/1975.shtml) in the 1975 Big Red Machine juggernaut, sorted by era-adjusted OBP.
+
+```{r}
+kable(rbind(
+totals_bat(bat_season %>% filter(year == 1975, name == "Joe Morgan")),
+totals_bat(bat_season %>% filter(year == 1975, name == "Johnny Bench")),
+totals_bat(bat_season %>% filter(year == 1975, name == "George Foster")),
+totals_bat(bat_season %>% filter(year == 1975, name == "Tony Perez")), 
+totals_bat(bat_season %>% filter(year == 1975, name == "Dave Concepcion")),
+totals_bat(bat_season %>% filter(year == 1975, name == "Ken Griffey")),
+totals_bat(bat_season %>% filter(year == 1975, name == "Pete Rose")),
+totals_bat(bat_season %>% filter(year == 1975, name == "Cesar Geronimo"))) %>% 
+  arrange(desc(OBP))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+#### Aggregate Batting Line
+
+```{r}
+kable(
+  totals_bat(bat_season %>% filter(year == 1975, name %in% 
+    c("Joe Morgan", "Johnny Bench", "George Foster", "Tony Perez",
+      "Dave Concepcion", "Ken Griffey", "Pete Rose", "Cesar Geronimo"))) %>% 
+  dplyr::select(-name) %>% 
+  distinct()) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+### 1991 Atlanta Braves
+
+Here we list era-adjusted batting lines for the [starters](https://www.baseball-reference.com/teams/ATL/1991.shtml) of the 94-win 1991 Atlanta Braves, an offense that ranked 8th in 1991 in total runs per game, sorted by era-adjusted OBP.
+
+```{r}
+kable(rbind(
+totals_bat(bat_season %>% filter(year == 1991, name == "Greg Olson")),
+totals_bat(bat_season %>% filter(year == 1991, name == "Sid Bream")),
+totals_bat(bat_season %>% filter(year == 1991, name == "Jeff Treadway")),
+totals_bat(bat_season %>% filter(year == 1991, name == "Rafael Belliard")), 
+totals_bat(bat_season %>% filter(year == 1991, name == "Terry Pendleton")),
+totals_bat(bat_season %>% filter(year == 1991, name == "Lonnie Smith")),
+totals_bat(bat_season %>% filter(year == 1991, name == "Ron Gant")),
+totals_bat(bat_season %>% filter(year == 1991, name == "David Justice"))) %>% 
+  arrange(desc(OBP))) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+#### Aggregate Batting Line
+
+```{r}
+kable(
+  totals_bat(bat_season %>% filter(year == 1991, name %in% 
+    c("Greg Olson", "Sid Bream", "Jeff Treadway", "Rafael Belliard",
+      "Terry Pendleton", "Lonnie Smith", "Ron Gant", "David Justice"))) %>% 
+  dplyr::select(-name) %>% 
+  distinct()) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+That's a good group, but c'mon. 
+
+Luis Tiant also compiled a superior overall body of work than Hall of Famer Jack Morris, remarkably reinventing himself after injuries derailed his early prime.
+
+```{r}
+kable(rbind(
+totals_pit(pit_season %>% filter(name == "Luis Tiant")),
+totals_pit(pit_season %>% filter(name == "Jack Morris"))
+)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+Tiant is a Hall of Famer, not just a *what could have been*.
+
+
+
+## Mark Buehrle
+
+Our era-adjusted versions of WAR are very favorable to Buerhle's career. He ranks 100th in career ebWAR and 155th in career efWAR. We compare Buehrle to the same group of Hall of Famers that we compared Tiant with. Buehrle exceeds this group in both era-adjusted WAR totals and rates:
+
+```{r}
+kable(rbind(
+totals_pit(pit_season %>% filter(name == "Mark Buehrle")),
+totals_pit(pit_season %>% filter(name == "Jim Palmer")),
+totals_pit(pit_season %>% filter(name == "Bob Feller")),
+totals_pit(pit_season %>% filter(name == "Whitey Ford"))
+)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+```{r, eval = FALSE}
+which(WARcombined$name == "Mark Buehrle")
+which((WARcombined %>% arrange(desc(efWAR)))$name == "Mark Buehrle")
+```
+
+Mark Buehrle also has a World Series ring and two no-hitters, including a perfect game, to complement a career that, according to era-adjusted WAR, has been comparable to several currently unquestioned Hall of Fame pitchers. So, besides not having an era-adjustment tool until now, what is the knock against him? It seems that Buehrle is viewed as a [durable compiler](https://www.overtimeheroics.net/2021/03/05/mlb-history-mark-buehrle/) and not a truly great pitcher. The issue against Buehrle is that he was a durable compiler during a period in which pitching usage is much less than past eras. Thus, his raw innings pitched totals did not really amount to anything that impressive. However, when you compare innings "vs your peers" then this story changes. Buehrle's era-adjusted 3772 innings ranks 34th all-time.
+
+```{r, eval = FALSE}
+pitchers_career_adjusted %>% 
+  arrange(desc(IP)) 
+```
+
+
+## The Jeckyll and Hyde Legacy of Bob Feller
+
+Some readers may understandably wonder how a project centered on contextualization could overlook Bob Feller. Feller was a WWII hero, one whose stats were diminished because [he led the charge](https://www.mlb.com/news/bob-feller-enlists-in-navy-for-world-war-ii) of MLB players who selflessly gave up--borrowing vernacular from the more modern critical times--their "place of privilege" to join the war effort in an undeniably true act of [American Patriotism](https://www.youtube.com/watch?v=EPhWR4d3FJQ). Feller was 23 years old when he volunteered for the Navy and was at the height of his career. He broke into the league at age 17.
+
+Moreover, when restricting attention to what was done on the field, it is undeniable that Feller's highs (seasons with ebWAR greater than 6) were much higher than those of either Tiant (see above) or Buehrle. In addition, Feller threw three no-hitters, besting Beuhrle's two.
+
+```{r}
+kable(pit_season %>% 
+  filter(name == "Bob Feller") %>% 
+  filter(ebWAR >= 6) %>% 
+  dplyr::select(-ER, -playerID)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+```{r}
+kable(pit_season %>% 
+  filter(name == "Mark Buehrle") %>% 
+  filter(ebWAR >= 6) %>% 
+  dplyr::select(-ER, -playerID)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+But Feller was derailed by injuries, and he did not reinvent himself like Tiant. He was a shell of himself after 1947.
+
+```{r}
+kable(
+  pit_season %>% 
+    filter(name == "Bob Feller") %>% 
+    filter(year >= 1948)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+<!-- ```{r} -->
+<!-- kable( -->
+<!--   totals_pit(pit_season %>%  -->
+<!--   filter(name == "Bob Feller") %>%  -->
+<!--   filter(year >= 1948))) %>%  -->
+<!--   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) -->
+<!-- ``` -->
+
+
+His highs were higher, but his valleys were lower than both Tiant and Buehrle. A defining moment in Feller's career was him being a part of the 1948 World Series winning Cleveland Indians team. For his part, Feller went 0-2 in two starts, posting a 5.01 ERA in 14.1 innings pitched. Down the stretch and in the World Series, Bob Feller was repeatedly bailed out by his teammates, including recently integrated black stars Larry Doby and Satchel Paige. In Chapter 26 of [Our Team](https://www.amazon.com/Our-Team-Satchel-Changed-Baseball/dp/1250313791), Luke Epplin described Feller's final moments in the 1948 World Series:
+
+> The stage was set. Everything had fallen into place. It was Feller's destiny to close out the World Series in front of a hometown crowd. A victory that afternoon would be the culmination of a dream that had commenced on the diamond he and his father had carved into the family farm. Even **the two heartbreaking losses** Feller had suffered over the past week now could be recast in this new narrative as setbacks that made this particular game all the more dramaticcally satisfying... Far from the revelry, in a distant corner, Feller undressed in silence. In the eyes of one reporter, he "stood almost forlorn, smiling bravely and a bit self-conciously, as he sadly-gladly watched his beaming teammates celebrate with gay abandon." It was as if, a United Press article summarised, Feller deliberately was setting himslef apart from his teammates "in penance for **three times letting them down** in these last mad two weeks. It lent an edge of sadness to this noisy jubilee and you knew that Feller would have given almost anything to be standing in [Bearden's shoes](https://www.baseball-reference.com/boxes/BSN/BSN194810110.shtml). There was a certain irony to the scene: The pitcher who'd always seemed destined to steer the Indians to a championship had become an overlooked figure by the time it finally happened." 
+
+In other words, he choked.
+
+As stated earlier, he was bailed out by his black teammates Larry Doby and Satchel Paige in 1948. Years earlier, in October, 1941, Feller and Paige would face each other in an exhibition. After the contests, a then 22 year old Bob Feller said this of 35 year old Satchel Paige and other black players: 
+
+> "Satch is one of the few Negro baseball players I think could make the major league grade and stick, I've seen just about all of them, and there are only a few who I think could make good up there. Satchel is one of them... I wouldn't say that he'd be great in the major leagues if he were up there. You've got to remember that conditions are a lot different from this barnstorming business once you're up there in the majors."
+
+Meanwhile, after choking in the World Series and openly pouting in front of everyone while his teammates celebrated winning their championship, a then 24 year old WWII veteran Larry Doby reached out to 29 year old Bob Feller in a scene best described by Epplin:
+
+> Doby did what he no doubt wished every teammate had done for him: He walked over to Feller and stuck out his hand. "There were a lot of things--apology, brief happiness, and earnest congratulations--in Feller's eyes at that moment," observed one writer. "He in turn reached out with an eager hand which once fired the fastest pitch in baseball and lighted that somber corner with his smile. And with that handshake came a passing of sorts."
+
+Feller's legacy has been built up beyond merit. People like [Tim Kurkjian](https://www.espn.com/mlb/story/_/id/29072622/tim-kurkjian-baseball-fix-how-bob-feller-made-ted-williams-start-preparing-three-days-early) love to repeat that *Ted Williams once said Feller was the greatest pitcher he ever faced*, while completely ignoring that in 192 PAs against Feller, Williams, who remains a true legend even after statistical contextualization, had a .344/.474/.657 slash line with 10 home runs and only 13 strikeouts. In their time, Williams was dogged by the media, while Feller was lauded as a "from-the-farmlands prodigy" who was heir apparent to the seat left warm by Babe Ruth. 
+
+It is worth mentioning here that Ted Williams used his 1966 HOF induction speech platform to elevate the excluded Negro League players:
+
+> "I hope that someday, the names of Satchel Paige and Josh Gibson can … be added to the symbol of the great Negro League players that are not here only because they were not given a chance."
+
+[This article](https://www.mlb.com/news/ted-williams-hall-of-fame-speech-honored-negro-league-players) notes that in the early '90s, Williams told Bob Costas that speaking up for Negro League players was one of his proudest moments in baseball.
+
+> "No one encouraged me. I thought this thing alone... I’ve seen Satchel Paige. I’ve seen Josh Gibson. I heard about Buck Leonard. I heard about some of the other great black athletes. It just came out that [Hall of Fame] day ... [and I thought about] the great players of the past. ... Only because of their color, [they] didn’t have a chance to play in the big leagues."
+
+And so it is best to look at Feller's career with nuance. A purely nostalgic and rose-colored viewing of the Guardians' star that overlooks the negatives, like [this one by Tim Kurkjian](https://www.espn.com/mlb/story/_/id/29072622/tim-kurkjian-baseball-fix-how-bob-feller-made-ted-williams-start-preparing-three-days-early), risk twisting the concept of [American Patriotism](https://www.youtube.com/watch?v=1bXzFY72wbs) in the [minds of those so inclined](https://www.baseball-fever.com/forum/general-baseball/history-of-the-game/3750015-fangraphs-era-adjusted-war?p=3750050#post3750050) to see contextualization itself as a malicious distortion. One thing that is for certain: Bob "The Heater from Van Meter" Feller was Born in the USA! 
+
+~~Tiant~~ Feller is a Hall of Famer and a World Series champion, not just a *what could have been*.
+
+
+## Joe Posnanski's The Baseball 100
+
+Recently Joe Posnanski produced a [book of the 100 greatest players of all time](https://www.simonandschuster.com/books/The-Baseball-100/Joe-Posnanski/9781982180584). This book is elegant in its presentation and is a tour-de-force of great anecdotes, and it is an impressive achievement to have devised such an overall great list without advanced statistical methodology. While at the Athletic, [Posnanski had this to say](https://theathletic.com/1457115/2019/12/17/the-baseball-100-a-project-celebrating-the-greatest-players-in-history/) about his philosophy on ranking lists of these sort: Some of it is science, but admittedly some of it also art. I [Joe Posnanski] will give you a handful of guiding principles:
+
+
+>    1. I think today's players tend to be underrated compared to those who came before them.
+    2. I lean toward players who were great at their peak, even if that peak only lasted a short time, and lean away from those who were consistently but not toweringly good for a long time.
+    3. I lean toward players who did multiple things well over specialists (no matter how great) who basically did just one thing well.
+    4. I take a lot of care to make educated guesses about players whose careers were shortened by things beyond their control -- World War II, for example, or baseball's tragic and infuriating color line. I don't make the same adjustment for injuries. As Bill James has written, there's a big difference. The years when Joe DiMaggio or Ted Williams or Bob Feller were at war, the years when Josh Gibson and Oscar Charleston played in the Negro Leagues, they were still the best players on earth. They just couldn't play in the big leagues because of larger issues. When players get hurt -- take Don Mattingly, for example, and his back problems -- they stop being the best players in the world. I wish Donnie Baseball didn't get hurt, we all do, but he did, and he was never quite the same player after that. That’s not the same as saying that Bob Feller lost four years when he was still the best pitcher on earth.
+
+
+We provide Posnanski's top 25 NL/AL players of all-time along with our top 25 NL/AL players ranked by era-adjusted bWAR and era-adjusted fWAR. 
+
+```{r}
+dat = data.frame(
+  rank = 1:25, 
+  Pos = c("Willie Mays", "Babe Ruth", "Barry Bonds", "Hank Aaron", 
+  "Ted Williams", "Walter Johnson", "Ty Cobb", "Stan Musial", "Mickey Mantle", 
+  "Honus Wagner", "Roger Clemens", "Lou Gehrig", "Alex Rodriguez", 
+  "Rogers Hornsby", "Tris Speaker", "Mike Schmidt", "Frank Robinson", 
+  "Joe Morgan", "Lefty Grove", "Albert Pujols", "Rickey Henderson", 
+  "Pete Alexander", "Mike Trout", "Randy Johnson", "Eddie Collins"), 
+  ebWAR = WARcombined %>% pull(name) %>% head(25), 
+  efWAR = WARcombined %>% arrange(desc(efWAR)) %>% pull(name) %>% head(25))
+colnames(dat) = c("rank", "Posnanski’s NL/AL rankings", "ebWAR", "efWAR")
+kable(dat) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+We appreciate that Posnanski used an artistic as well as a scientific process to come up with the above rankings. And we appreiacte his thinking that today's players are underrated compared to those who came before them. We love that Posnanski placed Willie Mays in front of Babe Ruth! We also applaud Posnanski's effort to include great Negro League players in the upper echelon of his rankings, and we think that he has progressed the conversation on the greatness of Negro League players forward. For reference, Posnanski had Oscar Charleston at #5, Satchel Paige at #10, Josh Gibson at #15, and Pop Lloyd at #25. We removed these players from consideration so that we can make an apples-to-apples comparison between his methodology and our methodology, and we apologize to Posnanski because removing these names changes his list in a way that lowers its artistic value. All-in-all this ranking list is a great achievement.
+
+Now come our criticisms. Whatever reasoning led to putting Willie Mays ahead of Babe Ruth should have also placed Albert Pujols ahead of Lou Gehrig, Cal Ripken Jr. ahead of Honus Wagner, and both Randy Johnson and Greg Maddux ahead of Walter Johnson and Pete Alexander. However, a strong argument can be made for placing Lefty Grove higher than Greg Maddux and Randy Johnson.
+
+```{r}
+MLBpop = read_csv("../data/datMLBeligible.csv")
+foo = MLBpop %>% filter(year %in% c(1871, 1880 + 0:14*10)) %>% select(year,pop) %>% 
+  mutate(cumulative_pop = cumsum(pop))
+bar = foo %>% filter(year %in% c(1950,2010)) 
+p = as.numeric(bar[1,3]/bar[2,3])
+#p
+
+#1/sum(dbinom(6:10, size = 10, prob = p))
+#1/sum(dbinom(12:25, size = 25, prob = p))
+```
+
+We also observe that Posnanski's list contains 6 NL/AL players who began their career before integration in his top 10 list, and 12 such players who began their career before integration in his top 25 list. By our calculations, the chance of observing 12 or more pre-integration players in a top 25 list is around 1 in 57, and the chance of observing 6 or more pre-integration players in a top 10 list is around 1 in 38. Thus, Posnanski has maybe included too many old time players in his rankings of the greatest all-time players despite his efforts to not do this. 
+
+Posnanski has the advantage of not being married to a formula and can better account for things like player narratives, anecdotes, and all-time great talents like Trout not having enough seasons to belong to a career list based solely on career totals. We would enjoy seeing what Posnanski’s list would look like if he incorporated our era-adjusted rankings into his calculus instead of the [mysterious Tom Tango statistical list](https://www.youtube.com/watch?v=ODSJRvQA1pU&t=1101s&ab_channel=JustBaseballFans). Note that Ichiro has 70.71 career ebWAR which ranks 98th all-time, and 67.87 career efWAR which ranks 94th all-time. This does not include his time in Japan. If that time in Japan was worth 20 eWAR, which we think is a conservative estimate, then Ichiro would jump to 38th all-time in ebWAR and 36th in all-time efWAR. It is clear that Posnanski has deep admiration for Ichiro and that he rewarded him with the number 100 spot on the list to lead off his book. But with our method in mind, Posnanski could credibly put Ichiro at 25 all-time.
+
+```{r, eval = FALSE}
+which(WARcombined$name == "Ichiro Suzuki")
+which( (WARcombined %>% arrange(desc(efWAR)))$name == "Ichiro Suzuki")
+WARcombined %>% filter(name == "Ichiro Suzuki")
+
+WARcombined %>% filter(ebWAR >= 90.71) %>% nrow() + 1
+WARcombined %>% filter(efWAR >= 87.87) %>% nrow() + 1
+```
+
+Joey Votto, if you are reading this, then we would like to let you know that our era-adjustment methodology ranks you 90th in ebWAR and 103rd in efWAR which credibly can put you in the top 100. [You do not need to wait for Posnanski to come around!](https://www.youtube.com/watch?v=ODSJRvQA1pU&t=1955s) You are also third all-time in era-adjusted career OBP among players with at least 8000 PAs, ahead of Babe Ruth, Mickey Mantle, and Lou Gehrig.
+
+```{r, eval = FALSE}
+which(WARcombined$name == "Joey Votto")
+which( (WARcombined %>% arrange(desc(efWAR)))$name == "Joey Votto")
+bat_career %>% arrange(desc(OBP)) %>%  filter(PA >= 8000)
+```
+
+
+We will wrap up our discussion of Posnanski's work with a connection between his thought process and our mathematical-based approach. Posnanski states that when viewing players [all you can really do is look at the impact a player has in their own time and how much can one appreciate that impact](https://www.youtubetrimmer.com/view/?v=ODSJRvQA1pU&start=1517&end=1525&loop=0). This is exactly what our era-adjustment strategy is. Our method is an assessment of how a player performed vs their peers balanced with the size of the talent pool at the time the player played. Our method formalizes impact in a player's own time and how much we ought to appreciate that impact.
+
+
+## A comparison with two respectable internet lists
+
+One consistent theme of our work is that there are not many ranking lists that appropriately compare players across eras. However, there are two lists that we found which do a respectable job by employing methodology which alters WAR to arrive at an era-adjusted version of WAR. These lists are provided by: 
+
+1. [Baseball Egg](https://baseballegg.com/all-time-player-rankings/top-100-players-in-baseball-history/): One can see their methodology [here](https://baseballegg.com/how-we-ranked-baseballs-greatest-players/).
+2. [The 100 Greatest](https://www.the100greatest.com/2021/02/07/the-100-greatest-baseball-players-of-all-time/): One can see their methodology [here](https://www.the100greatest.com/2021/02/10/making-the-cut-baseball/).
+
+Both of these lists give considerations for a player's prime seasons. Thus we compare our JAWS rankings to these lists, see below (note that Negro League players are not considered here):
+
+
+
+```{r}
+dat = data.frame(
+  rank = 1:25, 
+  BEgg = c("Willie Mays", "Ted Williams", "Babe Ruth", "Hank Aaron", "Stan Musial", 
+           "Mickey Mantle", "Ty Cobb", "Rickey Henderson", "Albert Pujols", 
+           "Mike Schmidt", "Joe Morgan", "Rogers Hornsby", "Mike Trout",
+           "Walter Johnson", "Barry Bonds", "Lou Genrig", "Tris Speaker", 
+           "Cal Ripken", "Greg Maddux", "Honus Wagner", "Carl Yastrzemski", 
+           "Frank Robinson", "Eddie Collins", "Wade Boggs", "Mookie Betts"), 
+  G100 = c("Barry Bonds", "Babe Ruth", "Willie Mays", "Roger Clemens", "Lou Gehrig",
+           "Randy Johnson", "Hank Aaron", "Ted Williams", "Greg Maddux", "Alex Rodriguez", 
+           "Mike Schmidt", "Albert Pujols", "Ty Cobb", "Clayton Kershaw", "Mike Trout", 
+           "Pedro Martinez", "Justin Verlander", "Rogers Hornsby", "Mickey Mantle", 
+           "Stan Musial", "Walter Johnson", "Lefty Grove", "Mariano Rivera", 
+           "Max Scherzer", "Jimmie Foxx"), 
+  ebJAWS = dat_JAWS %>% arrange(desc(ebJAWS)) %>% 
+    head(25) %>% select(name),
+  efJAWS = dat_JAWS %>% arrange(desc(efJAWS)) %>% 
+    head(25) %>% select(name))
+colnames(dat) = c("rank", "Baseball Egg", "The 100 Greatest", "ebJAWS", "efJAWS")
+kable(dat) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+At a cursory glance these lists as very similar in that they all include a large amount of players that began their careers after baseball was integrated. Counts of players who began their career before baseball was integrated are below:
+\vspace{12pt}
+
+| Rank Tier | Baseball Egg | The 100 Greatest | ebJAWS | efJAWS |
+| :--- |:------|:------|:------|:------|
+| top 10 |4|3|2|3|
+| top 25 |10|9|7|7|
+
+<!-- ![](rankings_counts.png) -->
+
+
+
+\vspace{12pt}
+And here are corresponding measures of agreement with how these lists conform with what is expected assuming our MLB-eligible population is calculated correctly, and that baseball talent is evenly distributed across time. This measure of agreement is in the form of a chance that one could observe $x$ names in a top 10 or top 25 list who started their before baseball was integrated. A chance closer to 1 in 1 is better than a chance that is far away from 1 in 1. A chance of 1 in 1 means that the list gives under question would be in perfect agreement with what is statistically expected.
+\vspace{12pt}
+
+```{r, echo = FALSE, eval = FALSE}
+library(fullhouse)
+
+datMLB = read_csv("../data/datMLBeligible.csv")
+datMLB %>% as.data.frame()
+
+pops_decade = talentpool %>% 
+  filter(year %in% c(1871, 1880 + 10*0:13, 2010)) %>% 
+  dplyr::select(year, NLpop) %>% 
+  rename(pop = NLpop)
+pops_decade[1, 2] = pops_decade[1, 2] * 0.9
+#pops_decade[nrow(pops_decade), 2] =  
+#  pops_decade[nrow(pops_decade), 2] * 0.1
+
+pops_decade = pops_decade %>% 
+  mutate(pop_cumulative_prop =  cumsum(pop) / sum(pop))
+
+p1950 = pops_decade %>% filter(year == 1950) %>% pull(pop_cumulative_prop)
+
+1 / sum(dbinom(2:10, size = 10, prob = p1950))
+1 / sum(dbinom(3:10, size = 10, prob = p1950))
+1 / sum(dbinom(4:10, size = 10, prob = p1950))
+
+1 / sum(dbinom(7:25, size = 25, prob = p1950))
+1 / sum(dbinom(9:25, size = 25, prob = p1950))
+1 / sum(dbinom(10:25, size = 25, prob = p1950))
+```
+
+| Rank Tier | Baseball Egg | The 100 Greatest | ebJAWS | efJAWS |
+| :--- |:------|:------|:------|:------|
+| Top 10 |1 in 3.83|1 in 1.92|1 in 1.27|1 in 1.96|
+| Top 25 |1 in 9.98|1 in 5.10|1 in 3.78|1 in 1.96|
+
+
+<!-- ![](rankings_chance.png) -->
+
+
+\vspace{12pt}
+These lists all avoid very problematic preferential treatment of players from the past. That being said, our era-adjusted versions of JAWS provides representation of older era players that is closer in alignment to what is statistically expected than either Baseball Egg or The 100 Greatest. It is worth noting that Baseball Egg makes additional adjustments for PEDs and players whose careers were cut short due to war. We applaud these adjustments but ultimately think that they went a tad too far. 
+
+
+
+## ESPN's Top 100 MLB players of all time
+
+In February 2022, [ESPN published a new top 100 ranking list](https://www.espn.com/mlb/story/_/id/33145121/top-100-mlb-players-all). Their list was compiled in essentially two steps. As quoted from the linked article:
+
+>    First, they selected a pool of 200 candidate players using career WAR, Hall of Fame status, peak performance and overall contributions to the game as initial screening criteria. They then asked dozens of ESPN editors and writers to contribute to a balloting system that pits players from the list against each other in head-to-head voting. The question they posed: "Based on a combination of career value and peak performance, which player would you rank higher?" ESPN's participants voted more than 20,000 times. Based on those votes, the players were ranked by the percentage of the time they were chosen over any competing player. 
+
+
+The ESPN top 100 list included 6 players who began their career before baseball was integrated in their top 10, and 11 such players in their top 25. By our calculations, the chance of observing 11 or more pre-integration players in a top 25 list is around 1 in 30, and the chance of observing 6 or more pre-integration players in a top 10 list is around 1 in 50. Thus, ESPN has [yet again](https://www.espn.com/mlb/feature/video/_/id/8652210/espn-hall-100-ranking-all-greatest-mlb-players) likely included too many old time players in their rankings of the greatest all-time players.
+
+Our [first analysis of the ESPN ranking list](https://htmlpreview.github.io/?https://github.com/ecklab/era-adjustment-app-supplement/blob/main/article_II.html) was very critical of Jeff Passan. Some of our criticisms remain. However, we apologize to Passan for his desire to swap Mel Ott who ranked 62nd with Tony Gwynn who ranked 44th. In this version of our analysis, Tony Gwynn ranks 99th in ebWAR and 111th in efWAR while Mel Ott ranks 20th in both ebWAR and efWAR. 
+
+```{r, eval = FALSE}
+which((WARcombined %>% arrange(desc(ebWAR)))$name == "Tony Gwynn")
+which((WARcombined %>% arrange(desc(efWAR)))$name == "Tony Gwynn")
+which((WARcombined %>% arrange(desc(ebWAR)))$name == "Mel Ott")
+which((WARcombined %>% arrange(desc(efWAR)))$name == "Mel Ott")
+```
+
+```{r}
+kable(rbind(
+totals_bat(bat_season %>% filter(name == "Mel Ott")),
+totals_bat(bat_season %>% filter(playerID == "gwynnto01"))
+)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+<!-- The differences in evaluating Mel Ott's career and Tony Gwynn's career between this version of our work and the previous version likely rests with how the talent pools are calculated and how careers are evaluated. The previous calculation of the talent pool under counted eligible individuals during the days that Mel Ott played when compared with our current [calculation of the talent pool](https://htmlpreview.github.io/?https://github.com/ecklab/era-adjustment-app-supplement/blob/main/MLBeligiblepop.html) based on player demographic data. The previous version also compared careers by evaluating their performances as if everyone individually started playing in 1977. This method had some instability. For example, this method made no corrections for the strike shortened 1981 season. Our current version constructs a common environment from all non-strike NL seasons from 1977-1989, similar to what was done in [Michael Schell's work](https://www.amazon.com/Baseballs-All-Time-Hitters-Michael-Schell/dp/0691004552).  -->
+
+
+
+
+## Christina Kahrl
+
+In 2016 [Christina Kahrl wrote an excellent  article](https://www.espn.com/mlb/story/_/page/mlbrank100_wagnergehrig/mlbrank-exploring-greatness-honus-wagner-lou-gehrig) on problems with using poorly calibrated "vs your peers" statistics to compare players across eras. Specifically, she said:
+
+>    The Gehrig and Wagner arguments boil down to this: Via WAR or OPS+ or your own understanding of all of the numbers we have, you have faith in our measuring their relative extraordinary superiority over their peers in smaller leagues with deliberate personnel limitations and an uneven distribution of talent. You can have that faith, and it relies on a lot of data for support -- at the same time that you turn a blind eye to what's going on in the game that creates that data.
+
+
+This is a point that is routinely missed among baseball fans and analysts alike, in part because they have been duped by websites claiming that the metrics they use are era-adjusted. **For a metric to be era-adjusted it needs to account for the changing distributions of league statistics and the changing composition of MLB players.** Returning to Kahrl’s point about Lou Gehrig and Honus Wagner, the Full House Model ranks modern first basemen and shortstops above Gehrig and Wagner in career ebWAR and career efWAR.
+
+```{r}
+kable(rbind(
+totals_bat(bat_season %>% filter(name == "Albert Pujols")),
+totals_bat(bat_season %>% filter(name == "Lou Gehrig")) 
+)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+```{r}
+kable(rbind(
+totals_bat(bat_season %>% filter(name == "Alex Rodriguez")),
+totals_bat(bat_season %>% filter(name == "Cal Ripken Jr")), 
+totals_bat(bat_season %>% filter(name == "Honus Wagner"))
+)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+It is worth noting that Gehrig and Wagner are more competitive when evaluating their careers on a rate basis. Some of this is due to Pujols, A Rod, and Ripken Jr having longer era-adjusted careers than either Gehrig or Wagner. The comparisons below consider Pujols from 2001-2015, A Rod from 1994-2012, and Ripken Jr from 1981-1996. This viewing of careers has Gehrig and Pujols in a near tie, same as Wagner and Ripken Jr. That being said, our era-adjusted JAWS metrics rank Albert Pujols above Lou Gehrig and Cal Ripken Jr above Honus Wagner. And Alex Rodriguez is clearly better than Honus Wagner by all approaches mentioned here (career, shortened career, and JAWS).
+
+```{r}
+kable(rbind(
+totals_bat(bat_season %>% filter(name == "Albert Pujols", year <= 2015)),
+totals_bat(bat_season %>% filter(name == "Lou Gehrig")) 
+)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+```{r}
+kable(rbind(
+totals_bat(bat_season %>% filter(name == "Alex Rodriguez", year <= 2012)),
+totals_bat(bat_season %>% filter(name == "Cal Ripken Jr", year <= 1996)), 
+totals_bat(bat_season %>% filter(name == "Honus Wagner"))
+)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+## Ted Williams
+
+In a [previous article](https://community.fangraphs.com/challenging-war-and-other-statistics-as-era-adjustment-tools/), Eck devoted attention to Ted Williams with a focus on how his career would be much worse in an era-neutral context. While Williams's stats do take a huge hit as speculated, his era-adjusted career WAR values are still very high. He is also firmly in the top 10 on a rate basis, as seen above.
+
+Considering that Ted Williams missed a large part of five seasons due to wars, it is reasonable to include Ted Williams on the "Mount Rushmore" (top 4) of the greatest all-time baseball players based on this analysis... But there is a lot of context that this current analysis does not yet account for. We currently account for slow integration, talent depletion due to World War II, changing game numbers, and league expansion. But we do not yet account for the general quality of a players' competition, and Ted Williams did not face very good pitchers.
+
+
+```{r}
+pit_season_foo = pitchers_adjusted %>%
+  mutate(K9 = round(K/IP * 9,1)) %>%
+  mutate(ebWAR = round(ebWAR, 2), efWAR = round(efWAR, 2)) %>%
+  inner_join(Pitching %>% dplyr::select(playerID, yearID, lgID, teamID) %>%
+               rename(year = yearID, lg = lgID, team = teamID)) %>%
+  dplyr::select(name, playerID, lg, team, age, year, IP, ER, ERA, K,
+                K9, ebWAR, efWAR)
+```
+
+We now look at the best pitching seasons by ebWAR during the years that Williams did not serve in wars and we remove Williams's Boston teammates (namely Lefty Grove). What we find is that the top end of his competition is weak in both an absolute sense and relative to the contemporaneous NL. Below are the top 10 AL pitching seasons among non-Williams teammates during the years that Ted Williams played (1939-1960 with 1943-45 and 1952-53 removed).
+
+```{r}
+kable(pit_season_foo %>% filter(year >= 1939,
+                          year <= 1960,
+                          !year %in% c(1943,1944,1945,1952,1953),
+                          lg == "AL",
+                          team != "BOS") %>%
+        dplyr::select(-playerID) %>%
+  arrange(desc(ebWAR)) %>% head(10)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+Below are the top 10 NL pitching seasons during the same time period. Recall that interleague play did not exist when Ted Williams played.
+
+
+```{r}
+kable(pit_season_foo %>% filter(year >= 1939,
+                          year <= 1960,
+                          !year %in% c(1943,1944,1945,1952,1953),
+                          lg == "NL")  %>%
+        dplyr::select(-playerID) %>%
+  arrange(desc(ebWAR)) %>% head(10)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+The top 10 AL pitching seasons excluding Boston Red Sox players for select 20 year stretches are included below for comparison:
+
+
+
+**1961-1980 AL:**
+
+```{r}
+kable(pit_season_foo %>% filter(year >= 1961,
+                          year <= 1980,
+                          lg == "AL",
+                          team != "BOS")  %>%
+        dplyr::select(-playerID) %>%
+  arrange(desc(ebWAR)) %>% head(10)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+**1981-2000 AL:**
+
+```{r}
+kable(pit_season_foo %>% filter(year >= 1981,
+                          year <= 2000,
+                          lg == "AL",
+                          team != "BOS")  %>%
+        dplyr::select(-playerID) %>%
+  arrange(desc(ebWAR)) %>% head(10)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+**2001-2019 AL:**
+
+The 2020 season is not included.
+
+```{r}
+kable(pit_season_foo %>% filter(year >= 2001,
+                          year <= 2019,
+                          lg == "AL",
+                          team != "BOS")  %>%
+        dplyr::select(-playerID) %>%
+  arrange(desc(ebWAR)) %>% head(10)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+We now take a closer look at the wider field of Williams's competition. Below we display the distributions of ebWAR values of all pitchers who pitched at least 200 innings for each of the above AL eras with a focus on comparing Williams's AL to the other eras. We find that the field of pitchers that Williams faced is better than the era that came before it (which makes sense) and slightly worse than the contemporaneous NL. But his competition was far worse than the more modern eras.
+
+
+```{r}
+IP_thresh = 200
+ebWARWilliamsAL = pit_season_foo %>%
+  filter(year >= 1939, year <= 1960,
+         !year %in% c(1943,1944,1945,1952,1953),
+         lg == "AL",
+         team != "BOS",
+         IP >= IP_thresh)  %>%
+        dplyr::select(-playerID) %>%
+  pull(ebWAR)
+ebWARWilliamsNL = pit_season_foo %>%
+  filter(year >= 1939, year <= 1960,
+         !year %in% c(1943,1944,1945,1952,1953),
+         lg == "NL",
+         IP >= IP_thresh) %>%
+        dplyr::select(-playerID) %>%
+  pull(ebWAR)
+ebWAR1961 = pit_season_foo %>%
+  filter(year >= 1961, year <= 1980,
+         lg == "AL",
+         team != "BOS",
+         IP >= IP_thresh)  %>%
+        dplyr::select(-playerID) %>%
+  pull(ebWAR)
+ebWAR1981 = pit_season_foo %>%
+  filter(year >= 1981, year <= 2000,
+         lg == "AL",
+         team != "BOS",
+         IP >= IP_thresh)  %>%
+        dplyr::select(-playerID) %>%
+  pull(ebWAR)
+ebWAR2001 = pit_season_foo %>%
+  filter(year >= 2001, year <= 2019,
+         lg == "AL",
+         team != "BOS",
+         IP >= IP_thresh)  %>%
+        dplyr::select(-playerID) %>%
+  pull(ebWAR)
+
+dat_pit_Williams = data.frame(
+  ebWAR = c(ebWARWilliamsNL, ebWARWilliamsAL,
+            ebWAR1961, ebWAR1981, ebWAR2001),
+  era = c(rep("Williams NL", length(ebWARWilliamsNL)),
+          rep("Williams AL", length(ebWARWilliamsAL)),
+          rep("1961-1980", length(ebWAR1961)),
+          rep("1981-2000", length(ebWAR1981)),
+          rep("2001-2019", length(ebWAR2001)))
+)
+
+ggplot(dat_pit_Williams, aes(x = ebWAR, fill = era)) +
+  geom_density(alpha = 0.25) +
+  theme_minimal()
+```
+
+```{r}
+ggplot(dat_pit_Williams %>%
+         filter(era %in% c("Williams AL", "1961-1980","1981-2000","2001-2019")),
+       aes(x = ebWAR, fill = era)) +
+  geom_density(alpha = 0.25) +
+  theme_minimal()
+```
+
+
+```{r}
+ggplot(dat_pit_Williams %>%
+         filter(era %in% c("Williams AL", "Williams NL")),
+       aes(x = ebWAR, fill = era)) +
+  geom_density(alpha = 0.25) +
+  theme_minimal()
+```
+
+
+```{r, eval = FALSE}
+MaysNL = pit_season_foo %>%
+  filter(year >= 1951, year <= 1971,
+         !year %in% c(1952,1953),
+         lg == "NL",
+         !(team %in% c("NY1", "SFN")),
+         IP >= IP_thresh)  %>%
+        dplyr::select(-playerID) %>%
+  pull(ebWAR)
+AaronNL = pit_season_foo %>%
+  filter(year >= 1951, year <= 1974,
+         lg == "NL",
+         !(team %in% c("ML1", "ATL")),
+         IP >= IP_thresh)  %>%
+        dplyr::select(-playerID) %>%
+  pull(ebWAR)
+
+
+dat_pit_Williams = data.frame(
+  ebWAR = c(ebWARWilliamsNL, ebWARWilliamsAL,
+            ebWAR1961, ebWAR1981, ebWAR2001, MaysNL, AaronNL),
+  era = c(rep("Williams NL", length(ebWARWilliamsNL)),
+          rep("Williams AL", length(ebWARWilliamsAL)),
+          rep("1961-1980", length(ebWAR1961)),
+          rep("1981-2000", length(ebWAR1981)),
+          rep("2001-2019", length(ebWAR2001)),
+          rep("Mays NL", length(MaysNL)),
+          rep("Aaron NL", length(AaronNL)))
+)
+
+ggplot(dat_pit_Williams %>%
+         filter(era %in% c("Williams AL", "Mays NL", "Aaron NL")),
+       aes(x = ebWAR, fill = era)) +
+  geom_density(alpha = 0.25) +
+  theme_minimal()
+```
+
+
+What this shows is that Ted Williams competed in one of the weakest pitching environments of any extended era. Even Hal Newhouser's 1946 masterpiece (10.22 ebWAR) came without the wartime hiatus that sidelined so many stars, as he never had to shake off military "rust." In other words, if you were hand‑picking an environment to pile up legendary numbers, the 1939–1960 AL with Lefty Grove on your team would be near the top of the list.
+
+To compound the issue, Ted Williams faced fewer left handed-hitters than great hitters from more modern eras. Kenneth Matinale has some analyses on this topic, you can view one [here](https://radicalbaseball.blogspot.com/2013/03/ted-williams-lefty-batter-v-lefty.html). Below are Ted Williams splits from baseball reference (the information is not based on complete play-by-play data). We can see that Williams was far worse against left-handed pitchers, and that he faced lefties only 21.8% of the time. On the other hand, Tony Gywnn and George Brett faced lefties, respectively, 34.4% and 33.2% of the time.
+
+
+<div class="sr_share_wrap" style="overflow:auto">
+<table class="sr_share" id="" style="border-collapse: collapse; font-size:.83em; border: 1px sold #aaa; overflow:auto;"> <caption>Platoon Splits</caption> <colgroup><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col></colgroup> <thead> <tr> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">I</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">Split</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">G</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">GS</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">PA</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">AB</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">R</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">H</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">2B</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">3B</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">HR</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">RBI</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">SB</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">CS</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">BB</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">SO</th> <th scope="col" data-filter="1" data-name="Batting Average" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">BA</th> <th scope="col" data-filter="1" data-name="On-Base%" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">OBP</th> <th scope="col" data-filter="1" data-name="Slugging %" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">SLG</th> <th scope="col" data-filter="1" data-name="On-Base Plus Slugging" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">OPS</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">TB</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">GDP</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">HBP</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">SH</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">SF</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">IBB</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">ROE</th> <th scope="col" data-filter="1" data-name="Batting Average on Balls In Play" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">BAbip</th> <th scope="col" style="background-color: #ddd; border: 1px solid #aaa; padding: 2px;">tOPS+</th> </tr> </thead> <tbody><tr><th scope="row" style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">I</th><td data-endpoint="/tools/split_stats.cgi?full=0&amp;params=plato%7Cvs%20RHP%7Cwillite01%7Cbat%7CAB%7C" style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">vs RHP</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">1900</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; "></td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">7148</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">5587</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">1362</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">1953</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">388</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">59</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">421</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">1390</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">19</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">16</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">1516</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">474</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">.350</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">.489</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">.666</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">1.155</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">3722</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">145</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">26</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">1</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">18</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">225</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">64</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">.325</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">106</td></tr> <tr><th scope="row" style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">I</th><td data-endpoint="/tools/split_stats.cgi?full=0&amp;params=plato%7Cvs%20LHP%7Cwillite01%7Cbat%7CAB%7C" style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">vs LHP</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">778</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; "></td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">1988</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">1634</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">295</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">509</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">99</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">9</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">61</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">311</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">4</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">2</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">337</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">197</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">.312</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">.431</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">.495</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">.926</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">809</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">52</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">11</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">1</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">5</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">23</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">23</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">.324</td><td style="border: 1px solid #ccc; padding: 2px 3px 2px 2px; white-space: nowrap; ">67</td></tr> </tbody></table><div id="credit_plato" style="font-size: 0.83em;" class="sr_share">Provided by <a href="https://www.sports-reference.com/sharing.html?utm_source=direct&amp;utm_medium=Share&amp;utm_campaign=ShareTool">Baseball-Reference.com</a>: <a href="https://www.baseball-reference.com/players/split.fcgi?id=willite01&amp;year=Career&amp;t=b&amp;utm_source=direct&amp;utm_medium=Share&amp;utm_campaign=ShareTool#plato">View Original Table</a><br>Generated 7/15/2025.</div>
+
+<br>
+
+Below is an educated guess of Ted Williams's era-adjusted statistics had 33% of his plate appearances came against lefties (denoted Ted Williams\*). The table below also provides, for reference, Ted William's era-adjusted stats in the first row. We use a wOBA based approach to estimate Williams's era-adjusted WAR had 33% of his plate appearances came against lefties using the run values computed  [here](https://web.stanford.edu/class/stats50/files/STATS_50_Derivation_of_the_wOBA.pdf). This reference gives run values for outs (-0.26), walks (0.29), HBP (0.31), singles (0.44), doubles (0.74), triples (1.01), and home runs (1.39). We will suppose that one run is 0.10 WAR (using a [10 runs-to-wins conversion](https://www.baseball-reference.com/about/war_explained_runs_to_wins.shtml)). Note that Williams loses more home runs than hits. We assign a run value of 0.59 for this difference so that theses added hits are halfway between a single and a double.  The analysis here shows that Ted Williams's era-adjusted stats would take a hit if they were additionally adjusted for a more modern pitching deployment strategy, one that was embraced during the time frame that we are using to evaluate careers.
+
+```{r, eval = FALSE}
+AB = 550
+BB = 120
+HBP = 10
+PA = AB + BB + HBP + 10
+HR = 35
+X2B = 40
+H = round(0.330*AB)
+(HR*1.39 + X2B*0.74 + (H - HR -X2B)*0.44 + HBP*0.31 + 0.29*BB + -0.26*(PA - H-BB-HBP)) / 10
+
+((HR-30)*1.39 + X2B*0.74 + ((H-60) - (HR-30) -X2B)*0.44 + HBP*0.31 + 0.29*(BB-30) + -0.26*(PA - (H-60)-(BB-30)-HBP)) / 10
+
+```
+
+
+```{r}
+# Taken from splits table
+pL_ab = 1634/(1634+5587)
+AB_L = 1634; AB_R = 5587
+BAstar = pL_ab*0.312 + (1-pL_ab)*0.350
+pL_PA = 1988/(1988+7148)
+PA_L = 1988; PA_R = 7148
+BB_L = 334/PA_L; BB_R = 1516/PA_R
+BBstar = pL_PA*BB_L + (1-pL_PA)* BB_R
+HR_L = 61/AB_L;  HR_R = 421/AB_R
+HRstar = pL_PA*HR_L + (1-pL_PA)* HR_R
+
+#bat_career %>% filter(name == "Ted Williams")
+
+PA_Ted = bat_career %>% filter(name == "Ted Williams") %>% pull(PA)
+BB_Ted = bat_career %>% filter(name == "Ted Williams") %>% pull(BB)
+HR_Ted = bat_career %>% filter(name == "Ted Williams") %>% pull(HR)
+H_Ted = bat_career %>% filter(name == "Ted Williams") %>% pull(H)
+ebWAR_Ted = bat_career %>% filter(name == "Ted Williams") %>% pull(ebWAR)
+efWAR_Ted = bat_career %>% filter(name == "Ted Williams") %>% pull(efWAR)
+
+# BA with 33% PAs from lefties
+pL_ab2 = 0.33
+BAL2 = pL_ab2*(0.312/BAstar*0.314) + (1-pL_ab2)*(0.350/BAstar*0.314)
+
+# Walks with 33% PAs from lefties
+BBL2_rate = (pL_ab2*BB_L/BBstar*(BB_Ted/PA_Ted) + (1-pL_ab2)*BB_R/BBstar*(BB_Ted/PA_Ted))
+BBL2 = round(BBL2_rate * PA_Ted)
+
+# Get AB from PAs with 33% PAs from lefties (subtract BB, HBP, SH, SF from PA)
+AB_Ted = PA_Ted - BBL2 - 39 - 20 - 5
+
+# Get hits with 33% PAs from lefties
+HL2 = round(BAL2 * AB_Ted)
+
+# Get OBP with 33% PAs from lefties
+OBPL2 = (39 + BBL2 + HL2)/(AB_Ted + 39 + BBL2 + 20)
+
+# Get HR rate  with 33% PAs from lefties
+HRL2_rate = (pL_ab2*HR_L/HRstar*(HR_Ted/AB_Ted) + (1-pL_ab2)*HR_R/HRstar*(HR_Ted/AB_Ted))
+HRL2 = round(HRL2_rate * AB_Ted)
+
+#(506 - HRL2) +
+#(2333 - HL2 - (506 - HRL2) ) +
+#(1662 - BBL2)
+
+# Get woba and WAR with 33% PAs from lefties
+woba_WAR = (HR_Ted - HRL2)*0.139 +
+(H_Ted - HL2 - (HR_Ted - HRL2) ) * 0.044 +
+(BB_Ted - BBL2) * 0.029 +
+(HL2 - H_Ted + BBL2 - BB_Ted) * -0.026
+ebWAR_Ted_star = round(ebWAR_Ted - woba_WAR, 2)
+efWAR_Ted_star = round(efWAR_Ted - woba_WAR, 2)
+
+tab = rbind(
+  bat_career %>% 
+    filter(name == "Ted Williams") %>% 
+    dplyr::select(-playerID),
+  c("Ted Williams*", 
+    PA_Ted, 
+    AB_Ted, 
+    HL2, 
+    HRL2, 
+    BBL2, 
+    format(round(BAL2, 3), nsmall = 3),
+    round(OBPL2, 3), 
+    round(AB_Ted/HRL2,2), 
+    ebWAR_Ted_star, 
+    efWAR_Ted_star,
+    round(ebWAR_Ted_star/PA_Ted*650,2), 
+    round(efWAR_Ted_star/PA_Ted*650,2)
+  )
+)
+
+kable(tab) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+With all this in mind, we are now going to start a speculative exercise on Ted Williams prospects of remaining in the "Mount Rushmore" (top 4) of baseball players as judged by career value if you gave him his 5 seasons back. For this exercise we will remove Alex Rodriguez and Roger Clemens entirely and will consider Bonds stats through 1998 (denoted Barry Bonds\*\*) where the speculative projection of Bonds career is under the premise of what his career would look like had he not taken PEDs after his age 33 season (we will ignore [amphetamine speculation](https://www.baseballprospectus.com/news/article/4740/under-the-knife-amphetamines-and-baseball/) and just focus on PEDs as is standard practice with these types of discussions). This exercise will focus on ebWAR since it is favorable to Ted Williams, but we will be using our lefty percentage adjusted version of Ted Williams. Below is the list of all players that have obtained as much efWAR as Ted Williams where Mike Trout (through 2024, his age 32 season) is included in the conversation since he is the greatest player on a rate basis. In aggregate, this is a favorable set of circumstances for Ted Williams.
+
+
+```{r}
+foo = WARcombined %>% arrange(desc(ebWAR)) %>%
+  filter(efWAR >= efWAR_Ted_star | name == "Mike Trout",
+         !name %in% c("Alex Rodriguez", "Barry Bonds", "Ted Williams",
+                      "Roger Clemens")) %>%
+  dplyr::select(-playerID, -eWAR)
+foo = rbind(foo,
+      c("Ted Williams*", ebWAR_Ted_star, efWAR_Ted_star ),
+      c("Barry Bonds**", 97.33, 92.59)) %>%
+  mutate(ebWAR = as.numeric(ebWAR)) %>%
+  mutate(efWAR = as.numeric(efWAR)) %>%
+  arrange(desc(ebWAR))
+kable(foo) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+```{r, eval = FALSE}
+bat_season %>% filter(name == "Barry Bonds") %>%
+  filter(year <= 1998) %>%
+  summarise(ebWAR = sum(ebWAR), efWAR = sum(efWAR))
+```
+
+<!-- (keep in mind that Babe Ruth faced Walter Johnson and performed almost as well [against Lefty Grove](https://www.jmanesaz.com/player-matchup/bat_id/ruthba01/pit_id/grovele01) as Williams did against the anonymous lefties of his day) -->
+
+Where does this go from here? Ted Williams needs only roughly 18 ebWAR to eclipse Stan Musial for the 4th spot. Barry Bonds, who put up 8.6 ebWAR [in 1998](https://www.youtube.com/watch?v=xi7IPZAcP78) is slightly behind Ted Williams. Mike Trout is on the outside looking in. But Trout is the most productive player all-time on a rate basis and this analysis is only trough his age 32 season. A close look at Williams's stats reveal that he got off to a hot start in 1953 and his 1942 and 1946 seasons were amazing. So he could pull this off. But none of this accounts for the relatively poor pitching competition that Ted Williams faced in his time period. How much should that factor in? A 5% reduction? A 10% reduction? More? Less? And how do these types of projections account for injury risk?
+
+It seems like a tall order, albeit it is quite possible, for Ted Williams to crack the Mount Rushmore of career ebWAR from the analysis. But this analysis was very favorable to Williams. We considered a favorable metric, ignored Clemens, threw out all post-1998 Bonds stats, and have not adjusted for strength of competition. The same exercise viewed through efWAR would be slightly harder on him. Ted Williams remains one of the greatest players of all-time. But the mythical lore that surrounds him reflects failed attempts to properly evaluate the historical achievements of players. Ted Williams is Joey Votto with more power and more longevity. Oh the blasphemy!
+
+```{r}
+tab = rbind(
+  bat_career %>% 
+    filter(name == "Joey Votto") %>% 
+    dplyr::select(-playerID),
+  c("Ted Williams*", 
+    PA_Ted, 
+    AB_Ted, 
+    HL2, 
+    HRL2, 
+    BBL2, 
+    format(round(BAL2, 3), nsmall = 3),
+    round(OBPL2, 3), 
+    round(AB_Ted/HRL2,2), 
+    ebWAR_Ted_star, 
+    efWAR_Ted_star,
+    round(ebWAR_Ted_star/PA_Ted*650,2), 
+    round(efWAR_Ted_star/PA_Ted*650,2)
+  )
+)
+
+kable(tab) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+In all, we are skeptical that Ted Williams is in the Mt Rushmore of the game's all-time greatest players as judged by era-adjusted WAR. We hope that our analysis will shed light on Ted Williams accomplishments. We hope that the reader will see that the real Ted Williams with the lore removed is a truly all-time great player, just perhaps not Mt Rushmore worthy.
+
+
+***
+
+### Resources
+
+For readers who want direct access to our data, this document is written in R Markdown and now loads the *fullhouse* R package. No more local data files. You can install it from GitHub:
+
+https://github.com/DEck13/fullhouse
+
+The source code for this document is also available for cloning and experimentation. Feel free to play around with these statistics! **If you publish analyses or content based on our era-adjusted statistics, please cite at least one of the following**:
+
+- Shen Yan, Adrian Burgos Jr., Christopher Kinson, and Daniel J. Eck (2025). "Comparing baseball players across eras via novel Full House Modeling." Annals of Applied Statistics, 19(2): 1778-1799. DOI: 10.1214/24-AOAS1992.
+
+- Our website: https://eckeraadjustment.web.illinois.edu/
+
+Mathematically inclined readers may also explore the detailed primer vignette in the *Lahman* R package which walks through Full House Modeling mechanics through an example involving batting averages:
+
+```{r, echo = TRUE, eval = FALSE}
+#install.packages("devtools")
+devtools::install_github("cdalzell/Lahman", build_vignettes = TRUE)
+vignette("FHM-primer", package = "Lahman")
+```
+

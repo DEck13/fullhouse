@@ -19,7 +19,7 @@ generated via Full House Modeling. To explore these stats:
 
 - Visit our companion website:  
   https://eckeraadjustment.web.illinois.edu/
-- View the worked examples in `era_adjusted_V2.1.Rmd`, published here:  
+- View the worked examples in `inst/era_adjusted_V2.1.Rmd`, published here:  
   https://eckeraadjustment.web.illinois.edu/era_adjusted_V2.1.html
 
 

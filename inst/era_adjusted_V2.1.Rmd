@@ -56,35 +56,35 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
 
-We are pleased to release version 2.1 of our [era-adjusted stats](https://eckeraadjustment.web.illinois.edu/), computed via [Full House Modeling](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-19/issue-2/Comparing-baseball-players-across-eras-via-novel-Full-House-Modeling/10.1214/24-AOAS1992.short), for comparing baseball players across eras. This document presents updated all-time rankings and a variety of new findings through the lens of era-adjusted metrics. Although casual and fun in tone, some sections are more technical and may challenge your intuition. It is not intended to be fully digested in one sitting. Here is a list of topics:
+We are pleased to release version 2.1 of our [era-adjusted stats](https://eckeraadjustment.web.illinois.edu/), computed via [Full House Modeling](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-19/issue-2/Comparing-baseball-players-across-eras-via-novel-Full-House-Modeling/10.1214/24-AOAS1992.short), for comparing baseball players across eras. This document presents updated all-time rankings and a variety of new findings through the lens of era-adjusted metrics. 
 
-- Top 25 rankings by era-adjusted bWAR (ebWAR), era-adjusted fWAR (efWAR), and the average of the two (we will call it eWAR)
-- Top 25 rankings by era-adjusted JAWS
-- Top rankings list of batters by several era-adjusted statistics
-- Top rankings list of pitchers by several era-adjusted statistics
-- A brief look at historic performances from the 2022 baseball season
-- Mike Trout's career
-- Max Scherzer and a comparison with Tom Seaver
-- CC Sabathia's career
-- WAR and its usage in HOF discussions 
-- Luis Tiant's career and HOF case
-- Mark Buehrle's career and HOF case
-- The Jekyll and Hyde Legacy of Bob Feller
-- A comparison with Joe Posnanski's The Baseball 100
-- A comparison with Baseball Egg and the The 100 Greatest lists
-- A comparison with ESPN's top 100 list
-- A commentary on Christina Kahrl's insightful work
-- A comprehensive contextual evaluation of Ted Williams's career
+Although casual and fun in tone, some sections are more technical and may challenge your intuition. This is not meant to be a quick or polished read; it is best approached in pieces rather than all at once.
 
+## List of Topics {#topics}
 
-We will close with instructions for obtaining our era-adjusted stats, the source code for this document, and a technical primer on Full House Modeling.  
+- Top 25 rankings by [era-adjusted WAR](#eWAR): era-adjusted bWAR (ebWAR), era-adjusted fWAR (efWAR), and the average of the two (eWAR)
+- Top 25 rankings by [era-adjusted JAWS](#eJAWS)
+- Leader boards for [batters](#batting) and [pitchers](#pitching) by multiple era‑adjusted statistics
+- Highlights of historic performances from the [2022 season](#2022season)
+- Career explorations of [Mike Trout](#MikeTrout), [Max Scherzer](#MaxScherzer) (with a Tom Seaver comparison), and [CC Sabathia](#CCSabathia)
+- Era-adjusted WAR and its possible usage in [HOF discussions](#HOFdiscussions) 
+- HOF explorations of [Luis Tiant](#LuisTiant) and [Mark Buehrle](#MarkBuehrle) 
+- The Jekyll and Hyde Legacy of [Bob Feller](#BobFeller)
+- A comparison with Joe Posnanski's [*The Baseball 100*](#Baseball100), [Baseball Egg and the The 100 Greatest](#lists) lists, and with [ESPN's Top 100](#Top100) list
+- A commentary on [Christina Kahrl's](#Kahrl) insightful work
+- A comprehensive contextual evaluation of [Ted Williams's](#TedWilliams) career
 
-Note that our commentary on the rankings is intentionally minimal. We expand our analysis as we explore each topic, beginning with the 2022 season. This presentation builds upon the structure and goals of [Version 2.0](https://eckeraadjustment.web.illinois.edu/era_adjusted_V2_I.html) of the project. 
+Sections on Luis Tiant, Mark Buehrle, and Bob Feller will be better appreciated if read together. Our commentary on the rankings is intentionally minimal. We expand analysis as we explore each topic, beginning with the 2022 season. This presentation builds upon the structure and goals of [Version 2.0](https://eckeraadjustment.web.illinois.edu/era_adjusted_V2_I.html) of the project. 
+
+**Note on pitchers**: Era‑adjusted WAR for pitchers reflects only their pitching value. On the website, career snapshots at the top of player pages combine pitching and batting value for convenience. The only players treated as dual-role exceptions on our leaderboards are Babe Ruth and Shohei Ohtani, whose full-time work as both pitcher and batter justifies their inclusion in both rankings.
+
+We will close with some additional [resources](#Resources) including instructions for obtaining our era-adjusted stats, the source code for this document, and a technical primer on Full House Modeling.  
 
 Let's begin!
 
 ***
 
+## Era-Adjusted WAR Ranking Lists {#eWAR}
 
 ```{r load_stuff}
 # load R packages
@@ -141,7 +141,7 @@ WARcombined = WARcombined %>% mutate(eWAR = round((ebWAR + efWAR)/2,2))
 ```
 
 
-We now present new top 25 all-time lists according to ebWAR, efWAR, and eWAR (average of ebWAR and efWAR). Top 100 ranking lists by ebWAR and efWAR are on our website.
+We now present new top 25 all-time lists according to ebWAR, efWAR, and eWAR (average of ebWAR and efWAR). Top 100 ranking lists by ebWAR and efWAR are on our website. [Back to topics](#topics)
 
 
 ```{r}
@@ -155,6 +155,7 @@ WARcombined %>% select(name, eWAR) %>% arrange(desc(eWAR)) %>%
 ```
 
 
+## Era-Adjusted JAWS Ranking Lists {#eJAWS}
 
 
 ```{r}
@@ -268,7 +269,7 @@ dat_JAWS = rbind(dat_JAWS, df) %>% arrange(desc(ebJAWS)) %>%
 ```
 
 
-We also report a top 25 list of combined hitting and pitching JAWS according to ebWAR, efWAR, and eWAR (average of ebWAR and efWAR). Active players Mike Trout and Justin Verlander make the top 25 career era-adjusted JAWS rankings.
+We also report a top 25 list of combined hitting and pitching JAWS according to ebWAR, efWAR, and eWAR (average of ebWAR and efWAR). Active players Mike Trout and Justin Verlander make the top 25 career era-adjusted JAWS rankings. [Back to topics](#topics)
 
 
 ```{r}
@@ -283,11 +284,9 @@ dat_JAWS %>% select(name, eJAWS) %>% arrange(desc(eJAWS)) %>%
 
 
 
+## Era-Adjusted Ranking Lists for Batters {#batting}
 
-We now go through some top 10 lists for career batting categories.
-
-
-### Top 10 batting careers by ebWAR 
+### Top 10 Batting Careers by ebWAR 
 
 ```{r}
 kable(bat_career %>%  
@@ -297,7 +296,7 @@ kable(bat_career %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-### Top 10 batting careers by efWAR
+### Top 10 Batting Careers by efWAR
 
 ```{r}
 kable(bat_career %>% 
@@ -334,17 +333,19 @@ kable(bat_career %>%
 
 
 
-### The new 500 home run club
+### The New 500 Home Run Club
+
+In this analysis, this is really the 475 home run club. We lowered the threshold to 475 because the common reference era we use (1977–1989 NL, excluding the 1981 strike-shortened season) was harsh on home run hitters. Holding to a strict 500-HR cutoff would understate the accomplishments of players whose power was suppressed by that environment.
 
 ```{r}
 kable(bat_career %>% 
-        filter(HR >= 500) %>%         
+        filter(HR >= 475) %>%         
         dplyr::select(name, HR, AB) %>% 
         arrange(desc(HR))) %>%         
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-### Top 10 era-adjusted at bats per homerun (minimum 3000 PA) 
+### Top 10 Era-Adjusted ABs per HR (minimum 3000 PA) 
 
 ```{r}
 kable(bat_career %>% 
@@ -357,7 +358,7 @@ kable(bat_career %>%
 
 
 
-### Top 10 era-adjusted batting averages (minimum 3000 PA) 
+### Top 10 Era-Adjusted Batting Averages (minimum 3000 PA) 
 
 ```{r}
 kable(bat_career %>% 
@@ -368,7 +369,21 @@ kable(bat_career %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-### Top 10 era-adjusted on base percentage (minimum 3000 PA) 
+
+### Top 10 Era-Adjusted Batting Averages (minimum 8000 PA) 
+
+```{r}
+kable(bat_career %>% 
+        filter(PA >= 8000) %>% 
+        dplyr::select(name, BA, AB) %>% 
+        arrange(desc(BA)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+### Top 10 Era-Adjusted OBP (minimum 3000 PA) 
 
 ```{r}
 kable(bat_career %>% 
@@ -379,7 +394,21 @@ kable(bat_career %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-### The new 3000 hits club
+
+### Top 10 Era-Adjusted OBP (minimum 8000 PA) 
+
+```{r}
+kable(bat_career %>% 
+        filter(PA >= 8000) %>% 
+        dplyr::select(name, OBP, PA) %>% 
+        arrange(desc(OBP)) %>% 
+        head(10)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+
+
+### The New 3000 Hits Club
 
 ```{r}
 kable(bat_career %>% 
@@ -390,14 +419,13 @@ kable(bat_career %>%
 ```
 
 
-Our rankings place more modern players among the greatest all-time than conventional ranking lists. However, our new version is more favorable to old players than our previous version. This is best evidenced by Babe Ruth taking the career home run crown. Babe Ruth’s dominance was in part due to his talent, but was also in part due to him exercising a superior batting strategy that had not existed before. Therefore, Ruth's "vs his peers" stats are slightly distorted, and his era-adjusted stats will also be distorted as a result. Ruth's era-adjusted stats reflect the combination of his talent and his competitive advantage. This competitive advantage does not exist in other contexts. Thus Ruth's era-adjusted home run total is inflated when interpreted as a measure of his talent. Nonetheless, Babe Ruth remains an all-time great player as judged by era-adjusted statistics despite him playing so long ago.
+Our rankings place more modern players among the greatest all-time than conventional ranking lists. However, our new version is more favorable to old players than previous versions. This is best evidenced by Babe Ruth taking the career home run crown. 
 
-We wanted include a measure of era-adjusted WAR on a rate basis to demonstrate just how great Mike Trout has been. Trout is number 1 all-time in both ebWAR and efWAR per 650 PAs. He's 3rd in OBP, 18th in batting average, and 14th in home run rate. Of course these measures are favorable to Trout since his career has not reached its full decline phase. That being said, through his age 32 season Mike Trout is squarely in the top 25 era-adjusted JAWS rankings for all players (batters and pitchers). Absolutely amazing!
+Era-adjusted WAR on a rate basis demonstrates how great Mike Trout has been. He is number 1 all-time in both ebWAR and efWAR per 650 PAs. He's 3rd in OBP, 18th in batting average, and 14th in home run rate. Of course these measures are favorable to Trout since his career has not reached its full decline phase. That being said, through his age 32 season Mike Trout is squarely in the top 25 era-adjusted JAWS rankings for all players (batters and pitchers). Absolutely amazing! We will discuss Mike Trout more. [Back to topics](#topics)
 
+## Era-Adjusted Ranking Lists for Pitchers {#pitching}
 
-We now move to pitching.
-
-### Top 10 pitching careers by ebWAR 
+### Top 10 Pitching Careers by ebWAR 
 
 ```{r}
 kable(pit_career %>% 
@@ -407,7 +435,7 @@ kable(pit_career %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-### Top 10 pitching careers by efWAR
+### Top 10 Pitching Careers by efWAR
 
 ```{r}
 kable(pit_career %>% 
@@ -418,7 +446,7 @@ kable(pit_career %>%
 ```
 
 
-### Top 10 pitching careers by ebWAR per 250 IP (minimum 3000 IP)
+### Top 10 Pitching Careers by ebWAR per 250 IP (minimum 3000 IP)
 
 ```{r}
 kable(pit_career %>% 
@@ -429,7 +457,7 @@ kable(pit_career %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-### Top 10 pitching careers by efWAR per 250 IP (minimum 3000 IP)
+### Top 10 Pitching Careers by efWAR per 250 IP (minimum 3000 IP)
 
 ```{r}
 kable(pit_career %>% 
@@ -442,7 +470,7 @@ kable(pit_career %>%
 
 
 
-### Top 10 pitching careers by ERA (minimum 1500 IP) 
+### Top 10 Pitching Careers by ERA (minimum 1500 IP) 
 
 ```{r}
 kable(pit_career %>% 
@@ -453,7 +481,7 @@ kable(pit_career %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-### Top 10 pitching careers by ERA (minimum 3000 IP)
+### Top 10 Pitching Careers by ERA (minimum 3000 IP)
 
 ```{r}
 kable(pit_career %>% 
@@ -464,7 +492,7 @@ kable(pit_career %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-### Top 10 pitching careers by strikeouts 
+### Top 10 Pitching Careers by Strikeouts 
 
 ```{r}
 kable(pit_career %>% 
@@ -474,7 +502,7 @@ kable(pit_career %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-### Top 11 pitching careers by strikeouts per 9 innings (minimum 3000 IP) 
+### Top 11 Pitching Careers by Strikeouts per 9 Innings (minimum 3000 IP) 
 
 Here we display 11 names so that Walter Johnson is displayed.
 
@@ -487,7 +515,7 @@ kable(pit_career %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-### Top 10 pitching careers by innings 
+### Top 10 Pitching Careers by Innings 
 
 ```{r}
 kable(pit_career %>% 
@@ -501,11 +529,11 @@ Era-adjusted pitching statistics are dramatically different than the raw statist
 
 Not only has usage changed over time, but pitching itself and hitting tendencies have changed as well. This is important to note especially for strikeouts. Take Walter Johnson for example. Walter Johnson was the premiere strikeout pitcher of his day but he only had a K/9 ratio of 5.3 in his time. This is a reflection of an era in which hitters were insulted to strikeout, pitchers primarily pitched to contact, and several pitches like the slider and cutter either did not exist or were in their infancy. We see that if Walter Johnson were to have his statistics evaluated in a common environment used to compare all pitchers, then his K/9 ratio would be relatively higher. His era-adjusted K/9 ratio of 7.3 ranks 11th all-time (minimum 3000 IP). He also would pitch far fewer innings. Keep in mind that Johnsons's observed increase in K/9 also includes a relatively steep penalty placed on Walter Johnson for playing in a sparsely populated era of baseball. That is a testament to how far Walter Johnson stood above his peers in his own time.
 
-A new finding in this version of our project is that Lefty Grove is the best pitcher all-time by both ebWAR and efWAR on a rate basis (minimum 3000 IP). He also ranks 5th in career ebWAR and 7th in career efWAR. [Lefty Grove is a pitcher who has been slept on](https://www.youtube.com/watch?v=Rb1xX6kUO84&t=34s). Another fun new finding is that Justin Verlander joins the top 10 in career and rate basis ebWAR and efWAR. Verlander could finish in the top 5 in career ebWAR and efWAR if he ends his career strongly. It is also fun to see active pitchers Clayton Kershaw and Max Scherzer populate these era-adjusted ranking lists.
+A new finding in this version of our project is that Lefty Grove is the best pitcher all-time by both ebWAR and efWAR on a rate basis (minimum 3000 IP). He also ranks 5th in career ebWAR and 7th in career efWAR. [Lefty Grove is a pitcher who has been slept on](https://www.youtube.com/watch?v=Rb1xX6kUO84&t=34s). Another fun new finding is that Justin Verlander joins the top 10 in career and rate basis ebWAR and efWAR. Verlander could finish in the top 5 in career ebWAR and efWAR if he ends his career strongly. It is also fun to see active pitchers Clayton Kershaw and Max Scherzer populate these era-adjusted ranking lists. [Back to topics](#topics)
 
 
 
-## The 2022 season
+## The 2022 Season {#2022season}
 
 We have added and analyzed the truly historic 2022 season which featured two of the greatest individual seasons of all-time between Shohei Ohtani and Aaron Judge. Ohtani's 2022 season may be the greatest era-adjusted season of all-time while Judge's 2022 season is among the greatest offensive season of all-time. The tables below show the top 10 seasons all-time by era-adjusted ebWAR and efWAR (for everyone and then batters), and the breakdown of Judge's and Ohtani's 2022 seasons. We see that Shohei Ohtani's 2022 season is the best season ever by ebWAR.
 
@@ -586,8 +614,7 @@ Judge's 2022 season also ranks 12th all-time on home run rate among players with
 
 More on Ruth. Babe Ruth revolutionized baseball by prioritizing home run hitting as the MLB livened the baseball. As [stated here](https://www.tandfonline.com/doi/full/10.1080/09332480.2020.1726114), the single season home run record before Babe Ruth was 27 by Ned Williamson in 1884. Babe Ruth broke this record in 1919 when he hit 29 home runs. He subsequently destroyed his own record in the following 1920 season when he hit 54 home runs. The runner up in 1920 finished the season with only 15 home runs. This level of dominance has never been seen before and has never been seen since, and it poses a problem for era-adjustment techniques.
 
-**Babe Ruth’s dominance is in part due to his talent, but is also in part to him exercising a superior batting strategy that had not existed before.** Therefore, Ruth's "vs his peers" stats are slightly distorted, and his era-adjusted stats will also be distorted as a result. Ruth's era-adjusted stats reflect the combination of his talent and his competitive advantage. This competitive advantage does not exist in other contexts. Our method will therefore overestimate Ruth's era-adjusted home run hitting and his era-adjusted WAR since our method does not yet disentangle talent and competitive circumstance. The problem of the Babe Ruth anomaly confounds all era-adjustment techniques. We imagine that Ruth's era-adjusted OBP is also overestimated by our method. The Babe Ruth anomaly challenges all other era-adjustment techniques, and is especially challenging for anyone making interpretations based solely on raw or league adjusted "+" stats and WAR.
-
+**Babe Ruth’s dominance is in part due to his talent, but is also in part to him exercising a superior batting strategy that had not existed before.** Therefore, Ruth's "vs his peers" stats are slightly distorted, and his era-adjusted stats will also be distorted as a result. Ruth's era-adjusted stats reflect the combination of his talent and his competitive advantage. This competitive advantage does not exist in other contexts. Our method will therefore overestimate Ruth's era-adjusted home run hitting and his era-adjusted WAR since our method does not yet disentangle talent and competitive circumstance. The problem of the Babe Ruth anomaly confounds all era-adjustment techniques. We imagine that Ruth's era-adjusted OBP is also overestimated by our method. The Babe Ruth anomaly challenges all other era-adjustment techniques, and is especially challenging for anyone making interpretations based solely on raw or league adjusted "+" stats and WAR. [Back to topics](#topics)
 
 
 ```{r}
@@ -599,10 +626,7 @@ kable(bat_season %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-
-
-
-## Mike Trout
+## Mike Trout {#MikeTrout}
 
 Mike Trout is one of the greatest player in this current generation. The raw unadjusted WAR rankings suggest that it would be very unlikely for Trout to end his career with more WAR than old time great players like Babe Ruth and Ty Cobb. However, our era-adjustment method tells a slightly different story if Trout can stay healthy. Through the 2024 season Mike Trout is ranked 32nd in career ebWAR and 35th in career efWAR. The table below shows Mike Trout’s era-adjusted WAR totals and the 5 players immediately in front of him and behind him.  
 
@@ -726,10 +750,10 @@ kable(rbind(totals_bat(bat_season %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-As it stands right now Mike Trout has been the most productive batter on a rate basis in baseball history according to our era-adjusted versions of WAR. 
+As it stands right now Mike Trout has been the most productive batter on a rate basis in baseball history according to our era-adjusted versions of WAR. [Back to topics](#topics)
 
 
-## Max Scherzer
+## Max Scherzer {#MaxScherzer}
 
 Max Scherzer is one of this era's greatest pitchers. He is one of a handful of pitchers to win 3 Cy Young awards. Other players with 3 Cy Young awards include Roger Clemens, Randy Johnson, Greg Maddux, Steve Carlton, Tom Seaver, Pedro Martinez, Clayton Kershaw, Justin Verlander, Sandy Koufax, and Jim Palmer. Scherzer's run from 2013-2019 is especially dominant. Over that stretch he collected his Cy Young awards and never fell below fifth in the voting. That being said, his numbers over that stretch [do not leap off of the page](https://www.fangraphs.com/players/max-scherzer/3137/stats?position=P). Sure, his strikeout rates and strike outs per walk ratios are all-time elite, but ERA and most counting totals do not reflect the Cy Young voting when viewed from the lens of baseball history. Take Tom Seaver as an example. From 1969 to 1975 Terrific Tom boasted similar dominance and also collected 3 Cy Young awards. In 1971 Seaver had a 1.76 ERA over 286.1 innings. [Surely his run leaps off the page](https://www.fangraphs.com/players/tom-seaver/1011708/stats?position=P).
 
@@ -771,14 +795,14 @@ kable(cbind(pit_career %>% select(name, ebWAR) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-As you see above, similar analyses can point out the dominance of Scherzer's contemporaries: Clayton Kershaw, Justin Verlander, and Zack Greinke. 
+As you see above, similar analyses can point out the dominance of Scherzer's contemporaries: Clayton Kershaw, Justin Verlander, and Zack Greinke. [Back to topics](#topics)
 
 
-## CC Sabathia 
+## CC Sabathia {#CCSabathia}
 
 CC Sabathia retired in 2019 with 251 wins, over 3000 strikeouts, 62.3 bWAR and 66.5 fWAR. These are great numbers but are somewhat underwhelming in discussions of all-time pitchers in the Hall of Fame. Sabathia fell short of 300 wins and his career bWAR total is tied for 166th all-time. Our era-adjusted statistics are much more favorable to Sabathia's career. He ranks 74th all-time by ebWAR and 64th all-time by efWAR. Below we see that CC Sabathia's era-adjusted career compares favorable to the era-adjusted careers of some solid Hall of Famers from years past: Pete Alexander, Robin Roberts, Fergie Jenkins, Jim Palmer, and Don Sutton. These careers are sorted by ebWAR per 250 innings pitched (see table below). 
 
-Among this group Pete Alexander is currently viewed as an inner circle legend with 373 wins with nearly 120 bWAR and 95.7 fWAR. There is a good chance that if CC Sabathia had been born in the late 1880s and been allowed to play, then we would be viewing Sabathia as one of the key figures in baseball history who would lay the foundation for how to play the game [the right way](https://andscape.com/features/cc-sabathia-on-the-pressure-black-athletes-face-to-play-baseball-the-white-way/).
+Among this group Pete Alexander is currently viewed as an inner circle legend with 373 wins with nearly 120 bWAR and 95.7 fWAR. There is a good chance that if CC Sabathia had been born in the late 1880s and been allowed to play, then we would be viewing Sabathia as one of the key figures in baseball history who would lay the foundation for how to play the game [the right way](https://andscape.com/features/cc-sabathia-on-the-pressure-black-athletes-face-to-play-baseball-the-white-way/). [Back to topics](#topics)
 
 ```{r}
 kable(rbind(totals_pit(pit_season %>% filter(name == "Fergie Jenkins")),
@@ -794,7 +818,7 @@ kable(rbind(totals_pit(pit_season %>% filter(name == "Fergie Jenkins")),
 
 
 
-## WAR and it's usage in HOF discussions
+## Era-adjusted WAR and its possible usage in HOF discussions {#HOFdiscussions}
 
 One of the goals of WAR is to provide a framework for people like us to compare players across eras. The following passage is taken directly from the [What is WAR? page on FanGraphs](https://library.fangraphs.com/misc/war/): "The goal of WAR is to provide a holistic metric of player value that allows for comparisons across team, league, year, and **era** and a framework for player evaluation." 
 
@@ -852,7 +876,7 @@ kable(rbind(totals_bat(bat_season %>% filter(name == "Barry Bonds", year <= 1998
 ```
 
 
-Our era-adjusted statistics reveal that Cap Anson is more like Nick Markakis than Barry Bonds through 1998 as far as on-field production is concerned. Morevoer, Ty Cobb, who also is a controversial figure, at least has the on-field production to warrant HOF status. Perhaps Anson would remain in the HOF for having well over 3000 hits, but he is no where near the player that Ty Cobb was or that Barry Bonds was through 1998. Anson is Nick Markakis with more longevity and less plate discipline.
+Our era-adjusted statistics reveal that Cap Anson is more like Nick Markakis than Barry Bonds through 1998 as far as on-field production is concerned. Moreover, Ty Cobb, who also was a controversial figure, at least has the on-field production to warrant HOF status. Perhaps Anson would remain in the HOF for having well over 3000 hits, but he is no where near the player that Ty Cobb was or that Barry Bonds was through 1998. Anson is Nick Markakis with more longevity and less plate discipline.
 
 
 ```{r}
@@ -874,10 +898,12 @@ kable(rbind(totals_bat(bat_season %>% filter(name == "Adam Jones")),
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
+We now proceed with three Hall of Fame case studies through the lens of era-adjusted statistics: Luis Tiant, Mark Buehrle, and Bob Feller with some contextualization of Jack Morris thrown in. [Back to topics](#topics)
 
-## Luis Tiant
 
-Tiant spent 15 years on the BBWAA ballot and was never particularly close to the 75% voting threshold that was needed for HOF inclusion. He also was not very close to HOF inclusion when his name appeared on the ballot of various Veterans Committees. We would like to revisit Tiant's HOF case here. By ebWAR and efWAR Tiant ranks as the 43rd and 81st best pitcher in history and ranks 149th and 249th overall among both pitchers and hitters by, respectively, ebWAR and efWAR. There are currently 274 former MLB players in the HOF. If we included players based on stats, then Tiant would be in.
+## Luis Tiant {#LuisTiant}
+
+Tiant spent 15 years on the BBWAA ballot and was never particularly close to the 75% voting threshold that was needed for HOF inclusion. He also was not very close to HOF inclusion when his name appeared on the ballot of various Veterans Committees. We would like to revisit Tiant's HOF case here. By ebWAR and efWAR, Tiant ranks as the 43rd and 81st best pitcher in history and ranks 149th and 249th overall among both pitchers and hitters by, respectively, ebWAR and efWAR. There are currently 274 former MLB players in the HOF. If we included players based on stats, then Tiant would be in.
 
 ```{r, eval = FALSE}
 which(WARcombined$name == "Luis Tiant")
@@ -886,7 +912,7 @@ which(pit_career$name == "Luis Tiant")
 which( (pit_career %>% arrange(desc(efWAR)))$name == "Luis Tiant")
 ```
 
-Let’s compare Tiant to a small group of currently unquestioned Hall of Famers, Jim Plamer, Whitey Ford, and Bob Feller.Tiant holds up well. He ranks first in ebWAR per 250 innings pitched and is competitive across the board, finishing last in none of the major stats. Add in a few elite peak seasons, and his case looks strong.
+Let’s compare Tiant to a small group of currently unquestioned Hall of Famers: Jim Palmer, Whitey Ford, and Bob Feller. Tiant holds up well. He ranks first in ebWAR per 250 innings pitched and is competitive across the board, finishing last in none of the major stats. Add in a few elite peak seasons with ebWAR or efWAR greater than or equal to 6 (see below), and his case looks strong.
 
 
 ```{r}
@@ -910,7 +936,8 @@ kable(pit_season %>%
 
 Additionally, Tiant delivered a stellar World Series performance in 1975 against the 108-win Big Red Machine, going 2–0 with a 3.60 ERA over 25 innings in three starts. While that falls short of Jack Morris’s legendary 1991 2–0 record and 1.17 ERA across 23 innings, including a 10-inning shutout in Game 7. Context matters. No one romanticizes the 94-win 1991 Braves offense the way they do the Big Red Machine. 
 
-### The Big Red Machine
+
+#### The Big Red Machine
 
 Here we list era-adjusted batting lines for [starters](https://www.baseball-reference.com/teams/CIN/1975.shtml) in the 1975 Big Red Machine juggernaut, sorted by era-adjusted OBP.
 
@@ -941,7 +968,7 @@ kable(
 ```
 
 
-### 1991 Atlanta Braves
+#### 1991 Atlanta Braves
 
 Here we list era-adjusted batting lines for the [starters](https://www.baseball-reference.com/teams/ATL/1991.shtml) of the 94-win 1991 Atlanta Braves, an offense that ranked 8th in 1991 in total runs per game, sorted by era-adjusted OBP.
 
@@ -973,7 +1000,12 @@ kable(
 
 That's a good group, but c'mon. 
 
-Luis Tiant also compiled a superior overall body of work than Hall of Famer Jack Morris, remarkably reinventing himself after injuries derailed his early prime.
+It is important to note that Jack Morris's shutout was not the product of his efforts alone. In the 8th inning Morris gave up hard contact to Terry Pendleton with Lonnie Smith on first base. Rookie second baseman Chuck Knoblauch and shortstop Greg Gagne [executed a decoy play](https://www.youtube.com/watch?v=eM5kHJUBRSE) that, in combination with Smith losing track of the ball, prevented Smith from scoring on the play. Smith scores with near certainty had he tracked the ball off the bat, and the score would have been 1-0 Braves in the 8th inning had that counterfactual come to fruition. Morris then does not throw a shutout and his historic performance likely becomes lost in the sands of time like so many other great postseason performances. Off the top of your head: who did Morris pitch against in his historic game 7, and what were the stats of that pitcher in the 1991 World Series?
+
+Morris argued that the "decoy play" should have never happened because [Pendelton should have been called out on strikes](https://www.youtubetrimmer.com/view/?v=FYmR3Fa74GY&start=38&end=83&loop=0), claiming he whiffed at a pitch the umpire ruled a foul tip. It is clearly of personal importance to Jack Morris that his version of the story is widely known. It is worth wondering what Morris's opinion of Kent Hrbek's inning ending play where he [lifts Gant off first base](https://www.youtube.com/watch?v=MiraekmCNv4). If that call is overturned, the Braves’ odds of winning Game 2 rise, and they might even take the series in five games. In that timeline, Morris's 10-inning shutout in Game 7 never happens, and his Hall of Fame case looks much worse. At the time Morris made the above comments, he was still stuck on the ballot without induction. While striking out Pendleton would not have changed the outcome of the game, it would have improved Morris's individual performance.
+
+Ultimately, Morris’s Hall of Fame case rests heavily on one legendary performance that nearly unraveled due to events beyond his control. By contrast, Luis Tiant put together a broader, superior career. Tiant bests Morris on a rate basis and career ebWAR while Morris holds the edge on career efWAR. Tiant had four seasons with ebWAR or efWAR greater than or equal to 6 (see above) while Morris only has one (see below).
+
 
 ```{r}
 kable(rbind(
@@ -983,11 +1015,18 @@ totals_pit(pit_season %>% filter(name == "Jack Morris"))
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-Tiant is a Hall of Famer, not just a *what could have been*.
+```{r}
+kable(pit_season %>% 
+  filter(name == "Jack Morris") %>% 
+  filter(ebWAR >= 6 | efWAR >= 6) %>% 
+  dplyr::select(-ER, -playerID)) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+Tiant remarkably reinvented himself after injuries derailed his early prime. Luis Tiant is a Hall of Famer, not just a *what could have been*. [Back to topics](#topics)
 
 
-
-## Mark Buehrle
+## Mark Buehrle {#MarkBuehrle}
 
 Our era-adjusted versions of WAR are very favorable to Buerhle's career. He ranks 100th in career ebWAR and 155th in career efWAR. We compare Buehrle to the same group of Hall of Famers that we compared Tiant with. Buehrle exceeds this group in both era-adjusted WAR totals and rates:
 
@@ -1007,7 +1046,7 @@ which(WARcombined$name == "Mark Buehrle")
 which((WARcombined %>% arrange(desc(efWAR)))$name == "Mark Buehrle")
 ```
 
-Mark Buehrle also has a World Series ring and two no-hitters, including a perfect game, to complement a career that, according to era-adjusted WAR, has been comparable to several currently unquestioned Hall of Fame pitchers. So, besides not having an era-adjustment tool until now, what is the knock against him? It seems that Buehrle is viewed as a [durable compiler](https://www.overtimeheroics.net/2021/03/05/mlb-history-mark-buehrle/) and not a truly great pitcher. The issue against Buehrle is that he was a durable compiler during a period in which pitching usage is much less than past eras. Thus, his raw innings pitched totals did not really amount to anything that impressive. However, when you compare innings "vs your peers" then this story changes. Buehrle's era-adjusted 3772 innings ranks 34th all-time.
+Mark Buehrle also has a World Series ring and two no-hitters, including a perfect game, to complement a career that, according to era-adjusted WAR, has been comparable to several currently unquestioned Hall of Fame pitchers. So, besides not having an era-adjustment tool until now, what is the knock against him? It seems that Buehrle is viewed as a [durable compiler](https://www.overtimeheroics.net/2021/03/05/mlb-history-mark-buehrle/) and not a truly great pitcher. The issue against Buehrle is that he was a durable compiler during a period in which pitching usage is much less than past eras. Thus, his raw innings pitched totals did not really amount to anything that impressive. However, when you compare innings "vs your peers" then this story changes. Buehrle's era-adjusted 3772 innings ranks 34th all-time. [Back to topics](#topics)
 
 ```{r, eval = FALSE}
 pitchers_career_adjusted %>% 
@@ -1015,11 +1054,11 @@ pitchers_career_adjusted %>%
 ```
 
 
-## The Jeckyll and Hyde Legacy of Bob Feller
+## The Jeckyll and Hyde Legacy of Bob Feller {#BobFeller}
 
-Some readers may understandably wonder how a project centered on contextualization could overlook Bob Feller. Feller was a WWII hero, one whose stats were diminished because [he led the charge](https://www.mlb.com/news/bob-feller-enlists-in-navy-for-world-war-ii) of MLB players who selflessly gave up--borrowing vernacular from the more modern critical times--their "place of privilege" to join the war effort in an undeniably true act of [American Patriotism](https://www.youtube.com/watch?v=EPhWR4d3FJQ). Feller was 23 years old when he volunteered for the Navy and was at the height of his career. He broke into the league at age 17.
+Some readers may understandably wonder how a project centered on contextualization could overlook Bob Feller. Feller was a WWII hero, one whose stats were diminished because [he led the charge](https://www.mlb.com/news/bob-feller-enlists-in-navy-for-world-war-ii) of MLB players who selflessly gave up--borrowing vernacular from the more modern critical times--their "place of privilege" to join the war effort in an undeniably true act of [American Patriotism](https://www.youtube.com/watch?v=EPhWR4d3FJQ&t=41s). Feller was 23 years old when he volunteered for the Navy and was at the height of his career. He broke into the league at age 17.
 
-Moreover, when restricting attention to what was done on the field, it is undeniable that Feller's highs (seasons with ebWAR greater than 6) were much higher than those of either Tiant (see above) or Buehrle. In addition, Feller threw three no-hitters, besting Beuhrle's two.
+Moreover, when restricting attention to what was done on the field, it is undeniable that Feller's highs (seasons with ebWAR greater than 6) were much higher than those of either Tiant (see above) or Buehrle (see below). In addition, Feller threw three no-hitters, besting Beuhrle's two.
 
 ```{r}
 kable(pit_season %>% 
@@ -1064,11 +1103,11 @@ His highs were higher, but his valleys were lower than both Tiant and Buehrle. A
 
 In other words, he choked.
 
-As stated earlier, he was bailed out by his black teammates Larry Doby and Satchel Paige in 1948. Years earlier, in October, 1941, Feller and Paige would face each other in an exhibition. After the contests, a then 22 year old Bob Feller said this of 35 year old Satchel Paige and other black players: 
+As stated earlier, Bob Feller was bailed out by his black teammates Larry Doby and Satchel Paige in 1948. Years earlier, in October, 1941, Feller and Paige would face each other in an exhibition. After the contests, a then 22 year old Bob Feller said this of 35 year old Satchel Paige and other black players: 
 
 > "Satch is one of the few Negro baseball players I think could make the major league grade and stick, I've seen just about all of them, and there are only a few who I think could make good up there. Satchel is one of them... I wouldn't say that he'd be great in the major leagues if he were up there. You've got to remember that conditions are a lot different from this barnstorming business once you're up there in the majors."
 
-Meanwhile, after choking in the World Series and openly pouting in front of everyone while his teammates celebrated winning their championship, a then 24 year old WWII veteran Larry Doby reached out to 29 year old Bob Feller in a scene best described by Epplin:
+Meanwhile, after choking in the World Series and openly pouting in front of everyone while his teammates celebrated winning their championship, a then 24 year old WWII veteran Larry Doby reached out to 29 year old Bob Feller in a scene described well by Epplin:
 
 > Doby did what he no doubt wished every teammate had done for him: He walked over to Feller and stuck out his hand. "There were a lot of things--apology, brief happiness, and earnest congratulations--in Feller's eyes at that moment," observed one writer. "He in turn reached out with an eager hand which once fired the fastest pitch in baseball and lighted that somber corner with his smile. And with that handshake came a passing of sorts."
 
@@ -1084,10 +1123,10 @@ It is worth mentioning here that Ted Williams used his 1966 HOF induction speech
 
 And so it is best to look at Feller's career with nuance. A purely nostalgic and rose-colored viewing of the Guardians' star that overlooks the negatives, like [this one by Tim Kurkjian](https://www.espn.com/mlb/story/_/id/29072622/tim-kurkjian-baseball-fix-how-bob-feller-made-ted-williams-start-preparing-three-days-early), risk twisting the concept of [American Patriotism](https://www.youtube.com/watch?v=1bXzFY72wbs) in the [minds of those so inclined](https://www.baseball-fever.com/forum/general-baseball/history-of-the-game/3750015-fangraphs-era-adjusted-war?p=3750050#post3750050) to see contextualization itself as a malicious distortion. One thing that is for certain: Bob "The Heater from Van Meter" Feller was Born in the USA! 
 
-~~Tiant~~ Feller is a Hall of Famer and a World Series champion, not just a *what could have been*.
+~~Luis Tiant~~ Bob Feller is a Hall of Famer and a World Series champion, not just a *what could have been*. [Back to topics](#topics)
 
 
-## Joe Posnanski's The Baseball 100
+## Joe Posnanski's The Baseball 100 {#Baseball100}
 
 Recently Joe Posnanski produced a [book of the 100 greatest players of all time](https://www.simonandschuster.com/books/The-Baseball-100/Joe-Posnanski/9781982180584). This book is elegant in its presentation and is a tour-de-force of great anecdotes, and it is an impressive achievement to have devised such an overall great list without advanced statistical methodology. While at the Athletic, [Posnanski had this to say](https://theathletic.com/1457115/2019/12/17/the-baseball-100-a-project-celebrating-the-greatest-players-in-history/) about his philosophy on ranking lists of these sort: Some of it is science, but admittedly some of it also art. I [Joe Posnanski] will give you a handful of guiding principles:
 
@@ -1154,10 +1193,10 @@ bat_career %>% arrange(desc(OBP)) %>%  filter(PA >= 8000)
 ```
 
 
-We will wrap up our discussion of Posnanski's work with a connection between his thought process and our mathematical-based approach. Posnanski states that when viewing players [all you can really do is look at the impact a player has in their own time and how much can one appreciate that impact](https://www.youtubetrimmer.com/view/?v=ODSJRvQA1pU&start=1517&end=1525&loop=0). This is exactly what our era-adjustment strategy is. Our method is an assessment of how a player performed vs their peers balanced with the size of the talent pool at the time the player played. Our method formalizes impact in a player's own time and how much we ought to appreciate that impact.
+We will wrap up our discussion of Posnanski's work with a connection between his thought process and our mathematical-based approach. Posnanski states that when viewing players [all you can really do is look at the impact a player has in their own time and how much can one appreciate that impact](https://www.youtubetrimmer.com/view/?v=ODSJRvQA1pU&start=1517&end=1525&loop=0). This is exactly what our era-adjustment strategy is. Our method is an assessment of how a player performed vs their peers balanced with the size of the talent pool at the time the player played. Our method formalizes impact in a player's own time and how much we ought to appreciate that impact. [Back to topics](#topics)
 
 
-## A comparison with two respectable internet lists
+## A Comparison with Two Respectable Internet Lists {#lists}
 
 One consistent theme of our work is that there are not many ranking lists that appropriately compare players across eras. However, there are two lists that we found which do a respectable job by employing methodology which alters WAR to arrive at an era-adjusted version of WAR. These lists are provided by: 
 
@@ -1246,11 +1285,11 @@ p1950 = pops_decade %>% filter(year == 1950) %>% pull(pop_cumulative_prop)
 
 
 \vspace{12pt}
-These lists all avoid very problematic preferential treatment of players from the past. That being said, our era-adjusted versions of JAWS provides representation of older era players that is closer in alignment to what is statistically expected than either Baseball Egg or The 100 Greatest. It is worth noting that Baseball Egg makes additional adjustments for PEDs and players whose careers were cut short due to war. We applaud these adjustments but ultimately think that they went a tad too far. 
+These lists all avoid very problematic preferential treatment of players from the past. That being said, our era-adjusted versions of JAWS provides representation of older era players that is closer in alignment to what is statistically expected than either Baseball Egg or The 100 Greatest. It is worth noting that Baseball Egg makes additional adjustments for PEDs and players whose careers were cut short due to war. We applaud these adjustments but ultimately think that they went a tad too far. [Back to topics](#topics)
 
 
 
-## ESPN's Top 100 MLB players of all time
+## ESPN's Top 100 MLB Players of All-Time {#Top100}
 
 In February 2022, [ESPN published a new top 100 ranking list](https://www.espn.com/mlb/story/_/id/33145121/top-100-mlb-players-all). Their list was compiled in essentially two steps. As quoted from the linked article:
 
@@ -1259,7 +1298,7 @@ In February 2022, [ESPN published a new top 100 ranking list](https://www.espn.c
 
 The ESPN top 100 list included 6 players who began their career before baseball was integrated in their top 10, and 11 such players in their top 25. By our calculations, the chance of observing 11 or more pre-integration players in a top 25 list is around 1 in 30, and the chance of observing 6 or more pre-integration players in a top 10 list is around 1 in 50. Thus, ESPN has [yet again](https://www.espn.com/mlb/feature/video/_/id/8652210/espn-hall-100-ranking-all-greatest-mlb-players) likely included too many old time players in their rankings of the greatest all-time players.
 
-Our [first analysis of the ESPN ranking list](https://htmlpreview.github.io/?https://github.com/ecklab/era-adjustment-app-supplement/blob/main/article_II.html) was very critical of Jeff Passan. Some of our criticisms remain. However, we apologize to Passan for his desire to swap Mel Ott who ranked 62nd with Tony Gwynn who ranked 44th. In this version of our analysis, Tony Gwynn ranks 99th in ebWAR and 111th in efWAR while Mel Ott ranks 20th in both ebWAR and efWAR. 
+Our [first analysis of the ESPN ranking list](https://htmlpreview.github.io/?https://github.com/ecklab/era-adjustment-app-supplement/blob/main/article_II.html) was very critical of Jeff Passan. Some of our criticisms remain. However, we apologize to Passan for his desire to swap Mel Ott who ranked 62nd with Tony Gwynn who ranked 44th. In this version of our analysis, Tony Gwynn ranks 99th in ebWAR and 111th in efWAR while Mel Ott ranks 20th in both ebWAR and efWAR. [Back to topics](#topics)
 
 ```{r, eval = FALSE}
 which((WARcombined %>% arrange(desc(ebWAR)))$name == "Tony Gwynn")
@@ -1281,7 +1320,7 @@ totals_bat(bat_season %>% filter(playerID == "gwynnto01"))
 
 
 
-## Christina Kahrl
+## Christina Kahrl's Article {#Kahrl}
 
 In 2016 [Christina Kahrl wrote an excellent  article](https://www.espn.com/mlb/story/_/page/mlbrank100_wagnergehrig/mlbrank-exploring-greatness-honus-wagner-lou-gehrig) on problems with using poorly calibrated "vs your peers" statistics to compare players across eras. Specifically, she said:
 
@@ -1307,7 +1346,7 @@ totals_bat(bat_season %>% filter(name == "Honus Wagner"))
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
-It is worth noting that Gehrig and Wagner are more competitive when evaluating their careers on a rate basis. Some of this is due to Pujols, A Rod, and Ripken Jr having longer era-adjusted careers than either Gehrig or Wagner. The comparisons below consider Pujols from 2001-2015, A Rod from 1994-2012, and Ripken Jr from 1981-1996. This viewing of careers has Gehrig and Pujols in a near tie, same as Wagner and Ripken Jr. That being said, our era-adjusted JAWS metrics rank Albert Pujols above Lou Gehrig and Cal Ripken Jr above Honus Wagner. And Alex Rodriguez is clearly better than Honus Wagner by all approaches mentioned here (career, shortened career, and JAWS).
+It is worth noting that Gehrig and Wagner are more competitive when evaluating their careers on a rate basis. Some of this is due to Pujols, A Rod, and Ripken Jr having longer era-adjusted careers than either Gehrig or Wagner. The comparisons below consider Pujols from 2001-2015, A Rod from 1994-2012, and Ripken Jr from 1981-1996. This viewing of careers has Gehrig and Pujols in a near tie, same as Wagner and Ripken Jr. That being said, our era-adjusted JAWS metrics rank Albert Pujols above Lou Gehrig and Cal Ripken Jr above Honus Wagner. And Alex Rodriguez is clearly better than Honus Wagner by all approaches mentioned here (career, shortened career, and JAWS). [Back to topics](#topics)
 
 ```{r}
 kable(rbind(
@@ -1328,7 +1367,7 @@ totals_bat(bat_season %>% filter(name == "Honus Wagner"))
 
 
 
-## Ted Williams
+## Ted Williams {#TedWilliams}
 
 In a [previous article](https://community.fangraphs.com/challenging-war-and-other-statistics-as-era-adjustment-tools/), Eck devoted attention to Ted Williams with a focus on how his career would be much worse in an era-neutral context. While Williams's stats do take a huge hit as speculated, his era-adjusted career WAR values are still very high. He is also firmly in the top 10 on a rate basis, as seen above.
 
@@ -1663,7 +1702,7 @@ bat_season %>% filter(name == "Barry Bonds") %>%
 
 Where does this go from here? Ted Williams needs only roughly 18 ebWAR to eclipse Stan Musial for the 4th spot. Barry Bonds, who put up 8.6 ebWAR [in 1998](https://www.youtube.com/watch?v=xi7IPZAcP78) is slightly behind Ted Williams. Mike Trout is on the outside looking in. But Trout is the most productive player all-time on a rate basis and this analysis is only trough his age 32 season. A close look at Williams's stats reveal that he got off to a hot start in 1953 and his 1942 and 1946 seasons were amazing. So he could pull this off. But none of this accounts for the relatively poor pitching competition that Ted Williams faced in his time period. How much should that factor in? A 5% reduction? A 10% reduction? More? Less? And how do these types of projections account for injury risk?
 
-It seems like a tall order, albeit it is quite possible, for Ted Williams to crack the Mount Rushmore of career ebWAR from the analysis. But this analysis was very favorable to Williams. We considered a favorable metric, ignored Clemens, threw out all post-1998 Bonds stats, and have not adjusted for strength of competition. The same exercise viewed through efWAR would be slightly harder on him. Ted Williams remains one of the greatest players of all-time. But the mythical lore that surrounds him reflects failed attempts to properly evaluate the historical achievements of players. Ted Williams is Joey Votto with more power and more longevity. Oh the blasphemy!
+It seems like a tall order, albeit it is quite possible, for Ted Williams to crack the Mount Rushmore of career ebWAR from the analysis. But this analysis was very favorable to Williams. We considered a favorable metric, ignored Clemens, threw out all post-1998 Bonds stats, and have not adjusted for strength of competition. The same exercise viewed through efWAR would be slightly harder on him. Ted Williams remains one of the greatest players of all-time. But the mythical lore that surrounds him reflects failed attempts to properly evaluate the historical achievements of players. Ted Williams is Joey Votto with more power and more longevity. *Oh the blasphemy!*
 
 ```{r}
 tab = rbind(
@@ -1691,12 +1730,12 @@ kable(tab) %>%
 ```
 
 
-In all, we are skeptical that Ted Williams is in the Mt Rushmore of the game's all-time greatest players as judged by era-adjusted WAR. We hope that our analysis will shed light on Ted Williams accomplishments. We hope that the reader will see that the real Ted Williams with the lore removed is a truly all-time great player, just perhaps not Mt Rushmore worthy.
+In all, we are skeptical that Ted Williams is in the Mt Rushmore of the game's all-time greatest players as judged by era-adjusted WAR. We hope that our analysis will shed light on Ted Williams accomplishments. We hope that the reader will see that the real Ted Williams with the lore removed is a truly all-time great player, just perhaps not Mt Rushmore worthy. [Back to topics](#topics)
 
 
 ***
 
-### Resources
+## Resources {#Resources}
 
 For readers who want direct access to our data, this document is written in R Markdown and now loads the *fullhouse* R package. No more local data files. You can install it from GitHub:
 
@@ -1716,3 +1755,5 @@ devtools::install_github("cdalzell/Lahman", build_vignettes = TRUE)
 vignette("FHM-primer", package = "Lahman")
 ```
 
+
+[Back to topics](#topics)

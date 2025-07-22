@@ -1159,16 +1159,15 @@ We appreciate that Posnanski used an artistic as well as a scientific process to
 
 Now come our criticisms. Whatever reasoning led to putting Willie Mays ahead of Babe Ruth should have also placed Albert Pujols ahead of Lou Gehrig, Cal Ripken Jr. ahead of Honus Wagner, and both Randy Johnson and Greg Maddux ahead of Walter Johnson and Pete Alexander. However, a strong argument can be made for placing Lefty Grove higher than Greg Maddux and Randy Johnson.
 
-```{r}
-MLBpop = read_csv("../data/datMLBeligible.csv")
+```{r, eval = FALSE}
+# get talent pool estimate from fullhouse package
+# and compute proportion of aged 20-29 Males from 1950 or before
+MLBpop = talentpool %>% 
+  rename(pop = NLpop)
 foo = MLBpop %>% filter(year %in% c(1871, 1880 + 0:14*10)) %>% select(year,pop) %>% 
   mutate(cumulative_pop = cumsum(pop))
 bar = foo %>% filter(year %in% c(1950,2010)) 
 p = as.numeric(bar[1,3]/bar[2,3])
-#p
-
-#1/sum(dbinom(6:10, size = 10, prob = p))
-#1/sum(dbinom(12:25, size = 25, prob = p))
 ```
 
 We also observe that Posnanski's list contains 6 NL/AL players who began their career before integration in his top 10 list, and 12 such players who began their career before integration in his top 25 list. By our calculations, the chance of observing 12 or more pre-integration players in a top 25 list is around 1 in 57, and the chance of observing 6 or more pre-integration players in a top 10 list is around 1 in 38. Thus, Posnanski has maybe included too many old time players in his rankings of the greatest all-time players despite his efforts to not do this. 
@@ -1248,28 +1247,22 @@ And here are corresponding measures of agreement with how these lists conform wi
 \vspace{12pt}
 
 ```{r, echo = FALSE, eval = FALSE}
-library(fullhouse)
-
-datMLB = read_csv("../data/datMLBeligible.csv")
-datMLB %>% as.data.frame()
-
+# get talent pool estimate from fullhouse package
 pops_decade = talentpool %>% 
   filter(year %in% c(1871, 1880 + 10*0:13, 2010)) %>% 
   dplyr::select(year, NLpop) %>% 
   rename(pop = NLpop)
 pops_decade[1, 2] = pops_decade[1, 2] * 0.9
-#pops_decade[nrow(pops_decade), 2] =  
-#  pops_decade[nrow(pops_decade), 2] * 0.1
-
 pops_decade = pops_decade %>% 
   mutate(pop_cumulative_prop =  cumsum(pop) / sum(pop))
-
 p1950 = pops_decade %>% filter(year == 1950) %>% pull(pop_cumulative_prop)
 
+# top 10 chances
 1 / sum(dbinom(2:10, size = 10, prob = p1950))
 1 / sum(dbinom(3:10, size = 10, prob = p1950))
 1 / sum(dbinom(4:10, size = 10, prob = p1950))
 
+# top 25 chances
 1 / sum(dbinom(7:25, size = 25, prob = p1950))
 1 / sum(dbinom(9:25, size = 25, prob = p1950))
 1 / sum(dbinom(10:25, size = 25, prob = p1950))

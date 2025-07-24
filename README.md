@@ -4,7 +4,7 @@
 
 ## Installation
 
-You can install the development version from GitHub with **devtools**:
+You can install the development version from GitHub with `devtools`:
 
 ```r
 #install.packages("devtools")
@@ -21,7 +21,8 @@ generated via Full House Modeling. To explore these stats:
   https://eckeraadjustment.web.illinois.edu/
 - View the worked examples in `inst/era_adjusted_V2.1.Rmd`, published here:  
   https://eckeraadjustment.web.illinois.edu/era_adjusted_V2.1.html
-
+- **Watch the full walkthrough video** (line‑by‑line code demo for these examples):  
+  [YouTube Video Link](https://youtu.be/TmZTFWIzJXc)
 
 
 ## Vignette 

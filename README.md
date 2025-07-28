@@ -20,7 +20,8 @@ generated via Full House Modeling. To explore these stats:
 - Visit our companion website:  
   https://eckeraadjustment.web.illinois.edu/
 - View the worked examples in `inst/era_adjusted_V2.1.Rmd`, published here: https://eckeraadjustment.web.illinois.edu/era_adjusted_V2.1.html
-- **Watch the full walkthrough video** (line‑by‑line code demo for these examples): [YouTube Video Link](https://youtu.be/TmZTFWIzJXc)
+- **Watch the full walkthrough video** (line‑by‑line code demo for these examples): [YouTube Video Link](https://www.youtube.com/watch?v=TmZTFWIzJXc)
+
 
 
 ## Vignette 

@@ -132,8 +132,8 @@ k_finder = function(x, stab = 0.0001) {
   K1 = max(5, floor(1.3*sqrt(n)))
   K2 = 2*floor(log10(n)*sqrt(n))
 
-  try({
-    k_selector = do.call(rbind, lapply(K1:min(c(K1+500,K2,n)), function(k){
+  k_selector = try({
+    do.call(rbind, lapply(K1:min(c(K1+500,K2,n)), function(k){
       # Following Scholz (1995) Section 4
       Ytil = Y - median(Y)
       Ztil = tail(Ytil, k)
@@ -185,20 +185,26 @@ k_finder = function(x, stab = 0.0001) {
 
     }))
   }, silent = TRUE)
-
-  # restrict attention to all k values such that Tk in I0
-  # (see Section 5 of Scholz (1995) for details).
-  # pick k that has best "fit" as judged by the maximum
-  # candidate values from the best fitting linear and
-  # quadratic models
-  colnames(k_selector) = c("k", "Tk", "I0", "I1", "R.sq", "Rquad.sq")
-  k_selector = as.data.frame(k_selector)
-  k_selector_I0 = k_selector[which(k_selector$I0 == 1), ]
-  a = which.max(k_selector_I0$R.sq)
-  b = which.max(k_selector_I0$Rquad.sq)
-  ind = which.max(c(k_selector_I0[a, ]$R.sq,
-                    k_selector_I0[b, ]$Rquad.sq))
-  k = k_selector_I0[c(a,b)[ind] , 1]
+  
+  # If the try statement failed, then simply set k as K2 and finish.
+  if (inherits(k_selector, "try-error")) {
+    k = K2
+  }
+  else {
+    # restrict attention to all k values such that Tk in I0
+    # (see Section 5 of Scholz (1995) for details).
+    # pick k that has best "fit" as judged by the maximum
+    # candidate values from the best fitting linear and
+    # quadratic models
+    colnames(k_selector) = c("k", "Tk", "I0", "I1", "R.sq", "Rquad.sq")
+    k_selector = as.data.frame(k_selector)
+    k_selector_I0 = k_selector[which(k_selector$I0 == 1), ]
+    a = which.max(k_selector_I0$R.sq)
+    b = which.max(k_selector_I0$Rquad.sq)
+    ind = which.max(c(k_selector_I0[a, ]$R.sq,
+                      k_selector_I0[b, ]$Rquad.sq))
+    k = k_selector_I0[c(a,b)[ind] , 1]
+  }
 
   c(k, K1, K2)
 

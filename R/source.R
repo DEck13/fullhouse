@@ -84,6 +84,7 @@ aptitude_nonpara = function(p, alpha = 1.16, npop, cores = 1){
   #converts a vector of order stats
   #to their percentiles. this vector should be the entire
   #sample sorted in increasing order
+  order_p = order(p)
   p = sort(p) #just in case
   n = length(p)
 
@@ -101,8 +102,9 @@ aptitude_nonpara = function(p, alpha = 1.16, npop, cores = 1){
   latent_talent <- unlist(lapply(1:n, function(j) {
     qPareto(qbeta(u[j], j + npop - n, n + 1 - j), t = 1, alpha = alpha)
   }))
-
-  latent_talent
+  
+  # match with corresponding original ordering
+  latent_talent[order(order_p)]
 }
 
 #' k_finder Function
@@ -381,12 +383,7 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
 #' @keywords talent estimation, non-parametric, Pareto distribution
 #'
 talent_computing_nonpara = function(ystar, y, npop, alpha = 1.16){
-
-  ## make sure that y is arranged from highest to lowest
-  y = sort(y, decreasing = TRUE)
-
   ## latent talent
   latent_talent = aptitude_nonpara(p = unlist(lapply(y, function(xx)
     Ftilde(y = y, t = xx, ystar = ystar))), npop = npop)
-  sort(latent_talent, decreasing = TRUE)
 }

@@ -55,26 +55,24 @@ Ftilde = function(y, t, ystar){
 #' This function extracts talent values from percentiles.
 #'
 #' @param p A numeric vector representing percentiles of talent values.
-#' @param alpha A numeric value representing the shape parameter of the Pareto distribution. Default is 1.16.
 #' @param npop A numeric value representing the population size.
 #' @param cores Number of cores to be used for parallel processing. Default is 1.
 #' @return A numeric vector of talent values extracted from percentiles.
 #'
 #' @details
-#' The aptitude_nonpara function takes a vector of percentiles `p`, along with optional parameters `alpha` and `npop`,
+#' The aptitude_nonpara function takes a vector of percentiles `p`, along with optional parameter `npop`,
 #' and extracts talent values based on a non-parametric method.
 #'
-#' The function first converfs order statistics to their percentiles using the `order_pbino` function.
-#' Then, it transforms these percentiles to Pareto values corresponding to a general population of a greater than or equal size.
+#' The function first converts order statistics to their percentiles using the `order_pbino` function.
+#' Then, it transforms these percentiles to Gaussian values corresponding to a general population of a greater than or equal size.
 #'
-#' The parameter `alpha` represents the shape parameter of the Pareto distribution, with a default value of 1.16.
 #' The parameter `npop` represents the population size, which is used in the transformation process.
 #'In this implementation, the number of cores is set to 1 to ensure the code runs faster by avoiding the overhead
 #' associated with parallel processing.
 #'
 #' @keywords talent, percentiles
 ## This function extracts talent values from percentiles
-aptitude_nonpara = function(p, alpha = 1.16, npop, cores = 1){
+aptitude_nonpara = function(p, npop, cores = 1){
 
   #converts order stats to their percentiles
   order_pbino = function(p = 0, k = 1, n = 1e4) {
@@ -94,13 +92,10 @@ aptitude_nonpara = function(p, alpha = 1.16, npop, cores = 1){
   }))
 
   #transforms percentiles from order stats
-
-  #default alpha is that of the pareto principle 80-20
   n = length(u)
-
   #parallelize the computation of latent_talent
   latent_talent <- unlist(lapply(1:n, function(j) {
-    qPareto(qbeta(u[j], j + npop - n, n + 1 - j), t = 1, alpha = alpha)
+    qnorm(qbeta(u[j], j + npop - n, n + 1 - j))
   }))
   
   # match with corresponding original ordering
@@ -370,7 +365,6 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
 #' @param ystar A numeric value representing an additional parameter for talent estimation.
 #' @param y A numeric vector representing the observed statistic under study. This vector will be arranged from highest to lowest.
 #' @param npop A numeric value representing the population size.
-#' @param alpha A numeric value representing the shape parameter of the Pareto distribution. Default is 1.16.
 #'
 #' @return A vector containing estimated talent values based on the inputs.
 #'
@@ -380,9 +374,9 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
 #' It computes talent values for the input vector `y` using the Ftilde and aptitude_nonpara functions.
 #' The parameter `ystar` is an additional parameter used in talent estimation.
 #'
-#' @keywords talent estimation, non-parametric, Pareto distribution
+#' @keywords talent estimation, non-parametric, Gaussian distribution
 #'
-talent_computing_nonpara = function(ystar, y, npop, alpha = 1.16){
+talent_computing_nonpara = function(ystar, y, npop){
   ## latent talent
   latent_talent = aptitude_nonpara(p = unlist(lapply(y, function(xx)
     Ftilde(y = y, t = xx, ystar = ystar))), npop = npop)

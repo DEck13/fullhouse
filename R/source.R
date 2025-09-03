@@ -29,7 +29,7 @@
 #' ystar <- 1
 #' Ftilde(y, t, ystar)
 #'
-## interpolated distribution function estimator
+#' @export
 Ftilde = function(y, t, ystar){
   y = sort(y)
   n = length(y)
@@ -73,7 +73,8 @@ Ftilde = function(y, t, ystar){
 #' associated with parallel processing.
 #'
 #' @keywords talent, percentiles
-## This function extracts talent values from percentiles
+#'
+#' @export
 aptitude_nonpara = function(p, alpha = 1.16, npop, cores = 1){
 
   #converts order stats to their percentiles
@@ -122,6 +123,8 @@ aptitude_nonpara = function(p, alpha = 1.16, npop, cores = 1){
 #' It uses a combination of linear and quadratic models to estimate the optimal value of k
 #'
 #' @keywords optimization, modeling, linear approximation, order statistics
+#'
+#' @export
 k_finder = function(x, stab = 0.0001) {
   # obtain initial quantities for linear approximation
   Y = sort(as.matrix(x))
@@ -185,7 +188,7 @@ k_finder = function(x, stab = 0.0001) {
 
     }))
   }, silent = TRUE)
-  
+
   # If the try statement failed, then simply set k as K2 and finish.
   if (inherits(k_selector, "try-error")) {
     k = K2
@@ -240,6 +243,7 @@ k_finder = function(x, stab = 0.0001) {
 #'
 #' @keywords optimization, modeling, linear approximation, order statistics
 #'
+#' @export
 compute_ystarstar = function(x, k, stab = 0.0001) {
   Y = sort(as.matrix(x))
   n = length(Y)
@@ -367,25 +371,21 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
   out
 }
 
-#' talent_computing_nonpara Function
+#' talent_computing_nonpara
 #'
-#' This function estimates underlying talent values using a non-parametric method.
+#' Estimate underlying talent values using a non-parametric method.
 #'
-#' @param ystar A numeric value representing an additional parameter for talent estimation.
-#' @param y A numeric vector representing the observed statistic under study. This vector will be arranged from highest to lowest.
-#' @param npop A numeric value representing the population size.
-#' @param alpha A numeric value representing the shape parameter of the Pareto distribution. Default is 1.16.
+#' @param ystar Numeric. Additional parameter for talent estimation.
+#' @param y Numeric vector. Observed statistic, arranged from highest to lowest.
+#' @param npop Numeric. Population size.
+#' @param alpha Numeric. Pareto shape parameter. Default is 1.16.
 #'
-#' @return A vector containing estimated talent values based on the inputs.
+#' @return Numeric vector of estimated talent values.
 #'
 #' @details
-#' The talent_computing_nonpara function estimates underlying talent values using a non-parametric approach based on the input data.
+#' Computes talent values for `y` using `Ftilde()` and `aptitude_nonpara()`.
 #'
-#' It computes talent values for the input vector `y` using the Ftilde and aptitude_nonpara functions.
-#' The parameter `ystar` is an additional parameter used in talent estimation.
-#'
-#' @keywords talent estimation, non-parametric, Pareto distribution
-#'
+#' @export
 talent_computing_nonpara = function(ystar, y, npop, alpha = 1.16){
 
   ## make sure that y is arranged from highest to lowest

@@ -2,33 +2,25 @@
 % Please edit documentation in R/source.R
 \name{talent_computing_nonpara}
 \alias{talent_computing_nonpara}
-\title{talent_computing_nonpara Function}
+\title{talent_computing_nonpara}
 \usage{
 talent_computing_nonpara(ystar, y, npop, alpha = 1.16)
 }
 \arguments{
-\item{ystar}{A numeric value representing an additional parameter for talent estimation.}
+\item{ystar}{Numeric. Additional parameter for talent estimation.}
 
-\item{y}{A numeric vector representing the observed statistic under study. This vector will be arranged from highest to lowest.}
+\item{y}{Numeric vector. Observed statistic, arranged from highest to lowest.}
 
-\item{npop}{A numeric value representing the population size.}
+\item{npop}{Numeric. Population size.}
 
-\item{alpha}{A numeric value representing the shape parameter of the Pareto distribution. Default is 1.16.}
+\item{alpha}{Numeric. Pareto shape parameter. Default is 1.16.}
 }
 \value{
-A vector containing estimated talent values based on the inputs.
+Numeric vector of estimated talent values.
 }
 \description{
-This function estimates underlying talent values using a non-parametric method.
+Estimate underlying talent values using a non-parametric method.
 }
 \details{
-The talent_computing_nonpara function estimates underlying talent values using a non-parametric approach based on the input data.
-
-It computes talent values for the input vector \code{y} using the Ftilde and aptitude_nonpara functions.
-The parameter \code{ystar} is an additional parameter used in talent estimation.
+Computes talent values for \code{y} using \code{Ftilde()} and \code{aptitude_nonpara()}.
 }
-\keyword{Pareto}
-\keyword{distribution}
-\keyword{estimation,}
-\keyword{non-parametric,}
-\keyword{talent}

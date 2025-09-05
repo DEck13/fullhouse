@@ -29,7 +29,7 @@
 #' ystar <- 1
 #' Ftilde(y, t, ystar)
 #'
-## interpolated distribution function estimator
+#' @export
 Ftilde = function(y, t, ystar){
   y = sort(y)
   n = length(y)
@@ -71,9 +71,10 @@ Ftilde = function(y, t, ystar){
 #' associated with parallel processing.
 #'
 #' @keywords talent, percentiles
-## This function extracts talent values from percentiles
+#'
+#' @export
 aptitude_nonpara = function(p, npop, cores = 1){
-
+  
   #converts order stats to their percentiles
   order_pbino = function(p = 0, k = 1, n = 1e4) {
     pbinom(k - 1, prob = p, size = n, lower.tail = FALSE)
@@ -119,6 +120,8 @@ aptitude_nonpara = function(p, npop, cores = 1){
 #' It uses a combination of linear and quadratic models to estimate the optimal value of k
 #'
 #' @keywords optimization, modeling, linear approximation, order statistics
+#'
+#' @export
 k_finder = function(x, stab = 0.0001) {
   # obtain initial quantities for linear approximation
   Y = sort(as.matrix(x))
@@ -129,8 +132,8 @@ k_finder = function(x, stab = 0.0001) {
   K1 = max(5, floor(1.3*sqrt(n)))
   K2 = 2*floor(log10(n)*sqrt(n))
 
-  try({
-    k_selector = do.call(rbind, lapply(K1:min(c(K1+500,K2,n)), function(k){
+  k_selector = try({
+    do.call(rbind, lapply(K1:min(c(K1+500,K2,n)), function(k){
       # Following Scholz (1995) Section 4
       Ytil = Y - median(Y)
       Ztil = tail(Ytil, k)
@@ -183,19 +186,25 @@ k_finder = function(x, stab = 0.0001) {
     }))
   }, silent = TRUE)
 
-  # restrict attention to all k values such that Tk in I0
-  # (see Section 5 of Scholz (1995) for details).
-  # pick k that has best "fit" as judged by the maximum
-  # candidate values from the best fitting linear and
-  # quadratic models
-  colnames(k_selector) = c("k", "Tk", "I0", "I1", "R.sq", "Rquad.sq")
-  k_selector = as.data.frame(k_selector)
-  k_selector_I0 = k_selector[which(k_selector$I0 == 1), ]
-  a = which.max(k_selector_I0$R.sq)
-  b = which.max(k_selector_I0$Rquad.sq)
-  ind = which.max(c(k_selector_I0[a, ]$R.sq,
-                    k_selector_I0[b, ]$Rquad.sq))
-  k = k_selector_I0[c(a,b)[ind] , 1]
+  # If the try statement failed, then simply set k as K2 and finish.
+  if (inherits(k_selector, "try-error")) {
+    k = K2
+  }
+  else {
+    # restrict attention to all k values such that Tk in I0
+    # (see Section 5 of Scholz (1995) for details).
+    # pick k that has best "fit" as judged by the maximum
+    # candidate values from the best fitting linear and
+    # quadratic models
+    colnames(k_selector) = c("k", "Tk", "I0", "I1", "R.sq", "Rquad.sq")
+    k_selector = as.data.frame(k_selector)
+    k_selector_I0 = k_selector[which(k_selector$I0 == 1), ]
+    a = which.max(k_selector_I0$R.sq)
+    b = which.max(k_selector_I0$Rquad.sq)
+    ind = which.max(c(k_selector_I0[a, ]$R.sq,
+                      k_selector_I0[b, ]$Rquad.sq))
+    k = k_selector_I0[c(a,b)[ind] , 1]
+  }
 
   c(k, K1, K2)
 
@@ -231,6 +240,7 @@ k_finder = function(x, stab = 0.0001) {
 #'
 #' @keywords optimization, modeling, linear approximation, order statistics
 #'
+#' @export
 compute_ystarstar = function(x, k, stab = 0.0001) {
   Y = sort(as.matrix(x))
   n = length(Y)
@@ -358,24 +368,20 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
   out
 }
 
-#' talent_computing_nonpara Function
+#' talent_computing_nonpara
 #'
-#' This function estimates underlying talent values using a non-parametric method.
+#' Estimate underlying talent values using a non-parametric method.
 #'
-#' @param ystar A numeric value representing an additional parameter for talent estimation.
-#' @param y A numeric vector representing the observed statistic under study. This vector will be arranged from highest to lowest.
-#' @param npop A numeric value representing the population size.
+#' @param ystar Numeric. Additional parameter for talent estimation.
+#' @param y Numeric vector. Observed statistic, arranged from highest to lowest.
+#' @param npop Numeric. Population size.
 #'
-#' @return A vector containing estimated talent values based on the inputs.
+#' @return Numeric vector of estimated talent values.
 #'
 #' @details
-#' The talent_computing_nonpara function estimates underlying talent values using a non-parametric approach based on the input data.
+#' Computes talent values for `y` using `Ftilde()` and `aptitude_nonpara()`.
 #'
-#' It computes talent values for the input vector `y` using the Ftilde and aptitude_nonpara functions.
-#' The parameter `ystar` is an additional parameter used in talent estimation.
-#'
-#' @keywords talent estimation, non-parametric, Gaussian distribution
-#'
+#' @export
 talent_computing_nonpara = function(ystar, y, npop){
   ## latent talent
   latent_talent = aptitude_nonpara(p = unlist(lapply(y, function(xx)

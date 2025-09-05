@@ -1,6 +1,6 @@
 Package: fullhouse
 Title: Package for Estimating Talent and Era-Adjusted Performance Metrics
-Version: 1.0
+Version: 1.1
 Authors@R: 
     c(
         person("Daniel", "Eck", email = "dje13@illinois.edu", role = c("aut", "cre")),

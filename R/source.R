@@ -74,7 +74,7 @@ Ftilde = function(y, t, ystar){
 #'
 #' @export
 aptitude_nonpara = function(p, npop, cores = 1){
-  
+
   #converts order stats to their percentiles
   order_pbino = function(p = 0, k = 1, n = 1e4) {
     pbinom(k - 1, prob = p, size = n, lower.tail = FALSE)
@@ -96,9 +96,9 @@ aptitude_nonpara = function(p, npop, cores = 1){
   n = length(u)
   #parallelize the computation of latent_talent
   latent_talent <- unlist(lapply(1:n, function(j) {
-    qnorm(qbeta(u[j], j + npop - n, n + 1 - j))
+    qnorm(pbeta(u[j], j + npop - n, n + 1 - j))
   }))
-  
+
   # match with corresponding original ordering
   latent_talent[order(order_p)]
 }

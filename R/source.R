@@ -188,7 +188,7 @@ k_finder = function(x, stab = 0.0001) {
 
   # If the try statement failed, then simply set k as K2 and finish.
   if (inherits(k_selector, "try-error")) {
-    k = K2
+    k = min(K2, floor(n/2) - 1)
   }
   else {
     # restrict attention to all k values such that Tk in I0

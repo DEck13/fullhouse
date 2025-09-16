@@ -96,7 +96,7 @@ aptitude_nonpara = function(p, npop, cores = 1){
   n = length(u)
   #parallelize the computation of latent_talent
   latent_talent <- unlist(lapply(1:n, function(j) {
-    qnorm(pbeta(u[j], j + npop - n, n + 1 - j))
+    qnorm(qbeta(u[j], j + npop - n, n + 1 - j))
   }))
 
   # match with corresponding original ordering

@@ -6,12 +6,12 @@
 #'
 #' @param y A numeric vector representing the input data.
 #' @param t A numeric value indicating the target value.
-#' @param ystar A numeric value representing an additional parameter.
+#' @param ystarstar A numeric value representing an additional parameter.
 #'
 #' @return A transformed value computed based on the input parameters.
 #'
 #' @details
-#' The Ftilde function computes a transformed value based on the input data vector `y`, a target value `t`, and an additional parameter `ystar`.
+#' The Ftilde function computes a transformed value based on the input data vector `y`, a target value `t`, and an additional parameter `ystarstar`.
 #'
 #' The algorithm sorts the input vector `y` and computes a new vector `ytilde` using a specific formula.
 #' Then, it computes the transformed value based on the relationship between `t` and the elements of `ytilde`.
@@ -26,16 +26,16 @@
 #' # Example usage of the Ftilde function
 #' y <- c(1, 2, 3, 4, 5)
 #' t <- 3.5
-#' ystar <- 1
-#' Ftilde(y, t, ystar)
+#' ystarstar <- 1
+#' Ftilde(y, t, ystarstar)
 #'
 #' @export
-Ftilde = function(y, t, ystar){
+Ftilde = function(y, t, ystarstar){
   y = sort(y)
   n = length(y)
   ytilde = rep(0, n + 1)
 
-  ytilde[n+1] = y[n] + ystar
+  ytilde[n+1] = y[n] + ystarstar
   ytilde[2:n] = unlist(lapply(2:n, function(j){
     (y[j]+y[j-1])/2
   }))
@@ -247,7 +247,7 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
   Y[n] = Y[n] + stab # for stability
   pi = 1 - (n:1 - 1/3)/(n + 1/3)
   X = W = log(pi/(1-pi))
-  ystar = 10; ub = 0.999
+  ystarstar = 10; ub = 0.999
 
   models = list(
     m1 = lm(tail(Y, k) ~ tail(W, k)),
@@ -267,13 +267,13 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
   #lines(tail(W, k), predict(selected_model))
   if(class(flag) != "try-error"){
     try({
-      g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
+      g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
       bar = uniroot(g, c(0, 100), tol = 1e-10)
-      ystar = bar$root
+      ystarstar = bar$root
     }, silent = TRUE)
   }
 
-  if(ystar == 10) {
+  if(ystarstar == 10) {
     selected_model = models[[2]]
     f = function(w) {
       max(Y) - predict(selected_model, newdata = data.frame(W = w))
@@ -286,9 +286,9 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
     #lines(tail(W, k), predict(selected_model))
     if(class(flag) != "try-error"){
       try({
-        g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
+        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
         bar = uniroot(g, c(0, 100), tol = 1e-10)
-        ystar = bar$root
+        ystarstar = bar$root
       }, silent = TRUE)
     }
   }
@@ -312,12 +312,12 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
     #lines(log(tail(W, k)), predict(selected_model))
     if(class(flag) != "try-error"){
       try({
-        g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
+        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
         bar = uniroot(g, c(0, 100), tol = 1e-10)
-        ystar = bar$root
+        ystarstar = bar$root
       }, silent = TRUE)
     }
-    if(ystar == 10) {
+    if(ystarstar == 10) {
       selected_model = models[[2]]
       f = function(w) {
         max(Y) - predict(selected_model, newdata = data.frame(W = w))
@@ -330,15 +330,15 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
       #lines(tail(W, k), predict(selected_model))
       if(class(flag) != "try-error"){
         try({
-          g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
+          g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
           bar = uniroot(g, c(0, 100), tol = 1e-10)
-          ystar = bar$root
+          ystarstar = bar$root
         }, silent = TRUE)
       }
     }
   }
 
-  if(ystar == 10 ) {
+  if(ystarstar == 10 ) {
     selected_model = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2) +
                           I(tail(W, k)^3))
     f = function(w) {
@@ -352,15 +352,15 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
     #lines(tail(W, k), predict(selected_model))
     if(class(flag) != "try-error"){
       try({
-        g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
+        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
         bar = uniroot(g, c(0, 100), tol = 1e-10)
-        ystar = bar$root
+        ystarstar = bar$root
       }, silent = TRUE)
     }
   }
 
   ## output
-  out = list(ystar = ystar,
+  out = list(ystarstar = ystarstar,
              model = selected_model,
              Y = tail(Y, k),
              pi = tail(pi, k),
@@ -372,7 +372,7 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
 #'
 #' Estimate underlying talent values using a non-parametric method.
 #'
-#' @param ystar Numeric. Additional parameter for talent estimation.
+#' @param ystarstar Numeric. Additional parameter for talent estimation.
 #' @param y Numeric vector. Observed statistic, arranged from highest to lowest.
 #' @param npop Numeric. Population size.
 #'
@@ -382,8 +382,8 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
 #' Computes talent values for `y` using `Ftilde()` and `aptitude_nonpara()`.
 #'
 #' @export
-talent_computing_nonpara = function(ystar, y, npop){
+talent_computing_nonpara = function(ystarstar, y, npop){
   ## latent talent
   latent_talent = aptitude_nonpara(p = unlist(lapply(y, function(xx)
-    Ftilde(y = y, t = xx, ystar = ystar))), npop = npop)
+    Ftilde(y = y, t = xx, ystarstar = ystarstar))), npop = npop)
 }

@@ -7,11 +7,12 @@
 #' @param y A numeric vector representing the input data.
 #' @param t A numeric value indicating the target value.
 #' @param ystarstar A numeric value representing an additional parameter.
+#' @param ystar A numeric value representing an additional parameter
 #'
 #' @return A transformed value computed based on the input parameters.
 #'
 #' @details
-#' The Ftilde function computes a transformed value based on the input data vector `y`, a target value `t`, and an additional parameter `ystarstar`.
+#' The Ftilde function computes a transformed value based on the input data vector `y`, a target value `t`, and an additional parameters `ystarstar` and `ystar`.
 #'
 #' The algorithm sorts the input vector `y` and computes a new vector `ytilde` using a specific formula.
 #' Then, it computes the transformed value based on the relationship between `t` and the elements of `ytilde`.
@@ -27,14 +28,20 @@
 #' y <- c(1, 2, 3, 4, 5)
 #' t <- 3.5
 #' ystarstar <- 1
-#' Ftilde(y, t, ystarstar)
+#' ystar <- 0.1
+#' Ftilde(y, t, ystarstar, ystar)
 #'
 #' @export
-Ftilde = function(y, t, ystarstar){
+Ftilde = function(y, t, ystarstar, ystar=NULL){
   y = sort(y)
   n = length(y)
   ytilde = rep(0, n + 1)
 
+  if (is.null(ystar)) { # default value for ystar
+    ystar = y[2] - y[1]
+  }
+  ytilde[1] = y[1] - ystar
+  
   ytilde[n+1] = y[n] + ystarstar
   ytilde[2:n] = unlist(lapply(2:n, function(j){
     (y[j]+y[j-1])/2

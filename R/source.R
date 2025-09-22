@@ -129,7 +129,7 @@ k_finder = function(x, stab = 0.0001) {
   Y[n] = Y[n] + stab # for stability
   pi = 1 - (n:1 - 1/3)/(n + 1/3)
   W = log(pi/(1-pi))
-  K1 = max(5, floor(1.3*sqrt(n)))
+  K1 = max(6, floor(1.3*sqrt(n)))
   K2 = 2*floor(log10(n)*sqrt(n))
 
   k_selector = try({

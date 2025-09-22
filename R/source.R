@@ -63,7 +63,6 @@ Ftilde = function(y, t, ystarstar, ystar=NULL){
 #'
 #' @param p A numeric vector representing percentiles of talent values.
 #' @param npop A numeric value representing the population size.
-#' @param cores Number of cores to be used for parallel processing. Default is 1.
 #' @return A numeric vector of talent values extracted from percentiles.
 #'
 #' @details
@@ -74,13 +73,11 @@ Ftilde = function(y, t, ystarstar, ystar=NULL){
 #' Then, it transforms these percentiles to Gaussian values corresponding to a general population of a greater than or equal size.
 #'
 #' The parameter `npop` represents the population size, which is used in the transformation process.
-#'In this implementation, the number of cores is set to 1 to ensure the code runs faster by avoiding the overhead
-#' associated with parallel processing.
 #'
 #' @keywords talent, percentiles
 #'
 #' @export
-aptitude_nonpara = function(p, npop, cores = 1){
+aptitude_nonpara = function(p, npop){
 
   #converts order stats to their percentiles
   order_pbino = function(p = 0, k = 1, n = 1e4) {

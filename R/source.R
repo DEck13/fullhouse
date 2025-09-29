@@ -232,7 +232,10 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
   return(list(k = k,
               K1 = K1,
               K2 = K2,
-              k_selector_I0 = if (!inherits(k_selector, "try-error")) k_selector[which(k_selector$I0 == 1), ] else NULL))
+              k_selector_I0 = if (!inherits(k_selector, "try-error")) k_selector[which(k_selector$I0 == 1), ] else NULL,
+              a = if (!inherits(k_selector, "try-error")) a else NULL,
+              b = if (!inherits(k_selector, "try-error")) b else NULL,
+              ind = if (!inherits(k_selector, "try-error")) ind else NULL))
 
 }
 
@@ -281,6 +284,9 @@ compute_ystarstar = function(x, k_info, method = 'repo', stab = 0.01, cutoff = 1
   
   k = k_info$k
   k_selector_I0 = k_info$k_selector_I0 # might be NULL. only used in shen's method
+  a = k_info$a # might be NULL. only used in shen's method
+  b = k_info$b # might be NULL. only used in shen's method
+  ind = k_info$ind # might be NULL. only used in shen's method
 
   ###################################################################
   if (method == 'repo') {

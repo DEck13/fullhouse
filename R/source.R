@@ -114,6 +114,7 @@ aptitude_nonpara = function(p, npop){
 #' @param x A numeric vector representing the input data
 #' @param method A string indicating use repo's version vs shen's local version
 #' @param stab A numeric value representing the stability parameter
+#' @param cutoff A numeric value representing the cutoff when deciding the tail. 
 #'
 #' @return A numeric vector containing the optimal value of k, along with values K1 and K2
 #'
@@ -127,7 +128,7 @@ aptitude_nonpara = function(p, npop){
 #' @keywords optimization, modeling, linear approximation, order statistics
 #'
 #' @export
-k_finder = function(x, method = 'repo', stab = 0.01) {
+k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
   stopifnot(method %in% c('repo', 'shen'))
   
   # obtain initial quantities for linear approximation
@@ -244,7 +245,8 @@ k_finder = function(x, method = 'repo', stab = 0.01) {
 #' @param x A numeric value representing the input data.
 #' @param k_info A list containing pieces related to the parameter k
 #' @param method A string indicating use repo's version vs shen's local version
-#' @param stab A numeric value representing the stability parameter. Default is 0.0001.
+#' @param stab A numeric value representing the stability parameter.
+#' @param cutoff A numeric value representing the cutoff when deciding the tail. 
 #'
 #' @return A list containing the computed optimal value of ystarstar, along with auxiliary information.
 #'
@@ -267,7 +269,7 @@ k_finder = function(x, method = 'repo', stab = 0.01) {
 #' @keywords optimization, modeling, linear approximation, order statistics
 #'
 #' @export
-compute_ystarstar = function(x, k_info, method = 'repo', stab = 0.01) {
+compute_ystarstar = function(x, k_info, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
   stopifnot(method %in% c('repo', 'shen'))
   
   Y = sort(as.matrix(x))

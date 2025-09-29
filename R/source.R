@@ -140,7 +140,7 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
   K1 = max(6, floor(1.3*sqrt(n)))
   K2 = 2*floor(log10(n)*sqrt(n))
   
-  search_range = if (method == 'repo') K1:min(c(K1+500,K2,n) else 6:K2
+  search_range = if (method == 'repo') K1:min(c(K1+500,K2,n)) else 6:K2
 
   k_selector = try({
     do.call(rbind, lapply(search_range, function(k){

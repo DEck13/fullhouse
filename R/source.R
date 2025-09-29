@@ -205,7 +205,7 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
     colnames(k_selector) = c("k", "Tk", "I0", "I1", "R.sq", "Rquad.sq")
     k_selector = as.data.frame(k_selector)
     k_selector_I0 = k_selector[which(k_selector$I0 == 1), ]
-    if (nrow(k_selector_I0 > 0)) {
+    if (nrow(k_selector_I0) > 0) {
       a = which.max(k_selector_I0$R.sq)
       b = which.max(k_selector_I0$Rquad.sq)
       ind = which.max(c(k_selector_I0[a, ]$R.sq,

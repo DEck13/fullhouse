@@ -195,12 +195,8 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
 
     }))
   }, silent = TRUE)
-
-  # If the try statement failed, then default value for k
-  if (inherits(k_selector, "try-error")) {
-    k = if (method == 'repo') min(K2, floor(n/2) - 1) else 6
-  }
-  else {
+  
+  if (!inherits(k_selector, "try-error")) {
     # restrict attention to all k values such that Tk in I0
     # (see Section 5 of Scholz (1995) for details).
     # pick k that has best "fit" as judged by the maximum
@@ -209,17 +205,25 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
     colnames(k_selector) = c("k", "Tk", "I0", "I1", "R.sq", "Rquad.sq")
     k_selector = as.data.frame(k_selector)
     k_selector_I0 = k_selector[which(k_selector$I0 == 1), ]
-    a = which.max(k_selector_I0$R.sq)
-    b = which.max(k_selector_I0$Rquad.sq)
-    ind = which.max(c(k_selector_I0[a, ]$R.sq,
-                      k_selector_I0[b, ]$Rquad.sq))
-    k = k_selector_I0[c(a,b)[ind] , 1]
+    if (nrow(k_selector_I0 > 0)) {
+      a = which.max(k_selector_I0$R.sq)
+      b = which.max(k_selector_I0$Rquad.sq)
+      ind = which.max(c(k_selector_I0[a, ]$R.sq,
+                        k_selector_I0[b, ]$Rquad.sq))
+      k = k_selector_I0[c(a,b)[ind] , 1]
+    }
     if (method == 'shen') {
       if (diff(Y)[n-1] > cutoff){ 
         k <- max(k_selector_I0$k)
         if(k < 0) k <- K2
       }
     }
+  }
+  
+  # If try statement failed or procedure didn't obtain any k, then just use default value for k
+  k_selector_failed = inherits(k_selector, "try-error") | (exists(k_selector_I0) & nrow(k_selector_I0) == 0)
+  if (k_selector_failed) {
+    k = if (method == 'repo') min(K2, floor(n/2) - 1) else 6
   }
   
   if (method == 'shen') {
@@ -232,10 +236,10 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
   return(list(k = k,
               K1 = K1,
               K2 = K2,
-              k_selector_I0 = if (!inherits(k_selector, "try-error")) k_selector[which(k_selector$I0 == 1), ] else NULL,
-              a = if (!inherits(k_selector, "try-error")) a else NULL,
-              b = if (!inherits(k_selector, "try-error")) b else NULL,
-              ind = if (!inherits(k_selector, "try-error")) ind else NULL))
+              k_selector_I0 = if (k_selector_failed) k_selector[which(k_selector$I0 == 1), ] else NULL,
+              a = if (k_selector_failed) a else NULL,
+              b = if (k_selector_failed) b else NULL,
+              ind = if (k_selector_failed) ind else NULL))
 
 }
 

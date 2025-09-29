@@ -236,10 +236,10 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
   return(list(k = k,
               K1 = K1,
               K2 = K2,
-              k_selector_I0 = if (k_selector_failed) k_selector[which(k_selector$I0 == 1), ] else NULL,
-              a = if (k_selector_failed) a else NULL,
-              b = if (k_selector_failed) b else NULL,
-              ind = if (k_selector_failed) ind else NULL))
+              k_selector_I0 = if (!k_selector_failed) k_selector[which(k_selector$I0 == 1), ] else NULL,
+              a = if (!k_selector_failed) a else NULL,
+              b = if (!k_selector_failed) b else NULL,
+              ind = if (!k_selector_failed) ind else NULL))
 
 }
 

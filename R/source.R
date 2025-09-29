@@ -221,7 +221,7 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
   }
   
   # If try statement failed or procedure didn't obtain any k, then just use default value for k
-  k_selector_failed = inherits(k_selector, "try-error") | (exists("k_selector_I0") & nrow(k_selector_I0) == 0)
+  k_selector_failed = inherits(k_selector, "try-error") || (exists("k_selector_I0") && nrow(k_selector_I0) == 0)
   if (k_selector_failed) {
     k = if (method == 'repo') min(K2, floor(n/2) - 1) else 6
   }

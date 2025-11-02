@@ -25,10 +25,10 @@
 #'
 #' @examples
 #' # Example usage of the Ftilde function
-#' y <- c(1, 2, 3, 4, 5)
-#' t <- 3.5
-#' ystarstar <- 1
-#' ystar <- 0.1
+#' y = c(1, 2, 3, 4, 5)
+#' t = 3.5
+#' ystarstar = 1
+#' ystar = 0.1
 #' Ftilde(y, t, ystarstar, ystar)
 #'
 #' @export
@@ -92,14 +92,14 @@ aptitude_nonpara = function(p, npop){
   n = length(p)
 
   #parallelize the computation of u
-  u <- unlist(lapply(1:n, function(j) {
+  u = unlist(lapply(1:n, function(j) {
     order_pbino(p[j], k = j, n = n)
   }))
 
   #transforms percentiles from order stats
   n = length(u)
   #parallelize the computation of latent_talent
-  latent_talent <- unlist(lapply(1:n, function(j) {
+  latent_talent = unlist(lapply(1:n, function(j) {
     qnorm(qbeta(u[j], j + npop - n, n + 1 - j))
   }))
 
@@ -214,8 +214,8 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
     }
     if (method == 'shen') {
       if (diff(Y)[n-1] > cutoff){ 
-        k <- max(k_selector_I0$k)
-        if(k < 0) k <- K2
+        k = max(k_selector_I0$k)
+        if(k < 0) k = K2
       }
     }
   }
@@ -227,10 +227,10 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
   }
   
   if (method == 'shen') {
-    if(length(k) == 0) k <- round(mean(K1,K2))
-    if(is.na(k)) k <- round(mean(K1,K2))
-    if(k == 0) k <- round(mean(K1,K2))
-    if(k >= n) k <- K2
+    if(length(k) == 0) k = round(mean(K1,K2))
+    if(is.na(k)) k = round(mean(K1,K2))
+    if(k == 0) k = round(mean(K1,K2))
+    if(k >= n) k = K2
   }
   
   return(list(k = k,
@@ -410,27 +410,27 @@ compute_ystarstar = function(x, k_info, method = 'repo', stab = 0.01, cutoff = 1
     selected_model = NULL
     
     # find probability value using linear tail behavior
-    Z <- tail(Y, k)
-    m1 <- lm(tail(Y, k) ~ tail(pi, k))
-    beta <- m1$coefficients
-    ystarstar <- 0
-    ub <- 0
-    f <- function(x) beta[1] + beta[2] * x - max(Y)
-    #delta <- beta[2]
+    Z = tail(Y, k)
+    m1 = lm(tail(Y, k) ~ tail(pi, k))
+    beta = m1$coefficients
+    ystarstar = 0
+    ub = 0
+    f = function(x) beta[1] + beta[2] * x - max(Y)
+    #delta = beta[2]
     try({
-      foo <- uniroot(f, c(0.0001, 5), tol = 1e-10)
-      ub <- foo$root
+      foo = uniroot(f, c(0.0001, 5), tol = 1e-10)
+      ub = foo$root
       selected_model = m1
     })
     
     # find probability value using logistic tail behavior
     if(ub >= 1){
-      m1 <- lm(tail(Y,k) ~ tail(W, k))
-      beta <- m1$coefficients
-      f <- function(x) beta[1] + beta[2] * log(x/(1-x)) - max(Y)
+      m1 = lm(tail(Y,k) ~ tail(W, k))
+      beta = m1$coefficients
+      f = function(x) beta[1] + beta[2] * log(x/(1-x)) - max(Y)
       try({
-        foo <- uniroot(f, c(0.000001, 0.999999), tol = 1e-10)
-        ub <- foo$root
+        foo = uniroot(f, c(0.000001, 0.999999), tol = 1e-10)
+        ub = foo$root
         selected_model = m1
       })  
     }
@@ -439,9 +439,9 @@ compute_ystarstar = function(x, k_info, method = 'repo', stab = 0.01, cutoff = 1
     # our Ftilde function
     if(ub >= Ftilde(y = Y, t = max(Y), ystarstar = 10)){
       try({
-        g <- function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
-        bar <- uniroot(g, c(0, 10), tol = 1e-10)
-        ystarstar <- bar$root
+        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+        bar = uniroot(g, c(0, 10), tol = 1e-10)
+        ystarstar = bar$root
       })
     }
     
@@ -453,89 +453,89 @@ compute_ystarstar = function(x, k_info, method = 'repo', stab = 0.01, cutoff = 1
     # expected. Thus ystarstar should be "large". A default large value will 
     # be ystarstar = 6 (altered to be log(1 + 6) for stability). This will 
     # be used when all else fails.
-    flag <- NULL
+    flag = NULL
     if(ub < Ftilde(y = Y, t = max(Y), ystarstar = 10) & !is.null(k_selector_I0)){
       
       # first try for largest suitable k as dictated by Scholz Section 3
-      k <- max(k_selector_I0$k) 
-      m1 <- lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
-      beta <- m1$coefficients
-      f <- function(x) beta[1] + beta[2] * log(x/(1-x)) +
+      k = max(k_selector_I0$k) 
+      m1 = lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
+      beta = m1$coefficients
+      f = function(x) beta[1] + beta[2] * log(x/(1-x)) +
         beta[3] * log(x/(1-x))^2 - max(Y)
-      flag <- try({
-        foo <- uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
-        ub <- foo$root
+      flag = try({
+        foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+        ub = foo$root
         selected_model = m1
       }, silent = TRUE)
       
       while(class(flag) == "try-error"){
-        k <- k - 1
+        k = k - 1
         # method fails; use ystarstar = 4
         if(k < 6){
-          ystarstar <- 6
+          ystarstar = 6
           break
         }
-        m1 <- lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
-        beta <- m1$coefficients
-        f <- function(x) beta[1] + beta[2] * log(x/(1-x)) +
+        m1 = lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
+        beta = m1$coefficients
+        f = function(x) beta[1] + beta[2] * log(x/(1-x)) +
           beta[3] * log(x/(1-x))^2 - max(Y)
-        flag <- try({
-          foo <- uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
-          ub <- foo$root
+        flag = try({
+          foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+          ub = foo$root
           selected_model = m1
         }, silent = TRUE)
       }
       
-      ystarstar_1 <- NULL
+      ystarstar_1 = NULL
       try({
-        g <- function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
-        bar <- uniroot(g, c(0, 10), tol = 1e-10)
-        ystarstar_1 <- bar$root    	
+        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+        bar = uniroot(g, c(0, 10), tol = 1e-10)
+        ystarstar_1 = bar$root    	
       }, silent = TRUE)
-      if(length(ystarstar_1) == 0) ystarstar_1 <- 6
+      if(length(ystarstar_1) == 0) ystarstar_1 = 6
       
       
       # now try for smallest suitable k as dictated by Scholz Section 3
-      k <- min(k_selector_I0$k)
-      if(length(k) == 0) k <- 6
-      m1 <- lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
-      beta <- m1$coefficients
-      f <- function(x) beta[1] + beta[2] * log(x/(1-x)) + 
+      k = min(k_selector_I0$k)
+      if(length(k) == 0) k = 6
+      m1 = lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
+      beta = m1$coefficients
+      f = function(x) beta[1] + beta[2] * log(x/(1-x)) + 
         beta[3] * log(x/(1-x))^2 - max(Y)
-      flag <- try({
-        foo <- uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
-        ub <- foo$root
+      flag = try({
+        foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+        ub = foo$root
         selected_model = m1
       }, silent = TRUE)  
       while(class(flag) == "try-error"){
-        k <- k + 1
+        k = k + 1
         # method fails; use ystarstar = 4
         if(k > max(k_selector_I0$k)){
-          ystarstar <- 6
+          ystarstar = 6
           break
         }
-        m1 <- lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
-        beta <- m1$coefficients
-        f <- function(x) beta[1] + beta[2] * log(x/(1-x)) + 
+        m1 = lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
+        beta = m1$coefficients
+        f = function(x) beta[1] + beta[2] * log(x/(1-x)) + 
           beta[3] * log(x/(1-x))^2 - max(Y)
-        flag <- try({
-          foo <- uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
-          ub <- foo$root   
+        flag = try({
+          foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+          ub = foo$root   
           selected_model = m1
         }, silent = TRUE)  
       }
       
-      ystarstar_2 <- NULL
+      ystarstar_2 = NULL
       try({
-        g <- function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
-        bar <- uniroot(g, c(0, 10), tol = 1e-10)
-        ystarstar_2 <- bar$root			
+        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+        bar = uniroot(g, c(0, 10), tol = 1e-10)
+        ystarstar_2 = bar$root			
       }, silent = TRUE)
-      if(length(ystarstar_2) == 0) ystarstar_2 <- 6
+      if(length(ystarstar_2) == 0) ystarstar_2 = 6
       
       # take ystarstar as the average of the lowest working k and 
       # largest working k
-      ystarstar <- mean(c(ystarstar_1, ystarstar_2))
+      ystarstar = mean(c(ystarstar_1, ystarstar_2))
       
     }
     
@@ -546,55 +546,55 @@ compute_ystarstar = function(x, k_info, method = 'repo', stab = 0.01, cutoff = 1
     #
     # where ystarstar* is computed with respect to Ytil
     if(ystarstar == 6 & !is.null(k_selector_I0)){
-      k <- k_selector_I0[c(a,b)[ind] , 1]
+      k = k_selector_I0[c(a,b)[ind] , 1]
       if(diff(Y)[n-1] > cutoff){ 
-        k <- max(k_selector_I0$k)
-        if(k < 0) k <- K2
+        k = max(k_selector_I0$k)
+        if(k < 0) k = K2
       }
-      if(length(k) == 0) k <- round(mean(K1,K2))
-      if(is.na(k)) k <- round(mean(K1,K2))
-      if(k == 0) k <- round(mean(K1,K2))
-      if(k >= n) k <- K2
+      if(length(k) == 0) k = round(mean(K1,K2))
+      if(is.na(k)) k = round(mean(K1,K2))
+      if(k == 0) k = round(mean(K1,K2))
+      if(k >= n) k = K2
       
-      m1 <- lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2))
-      beta <- m1$coefficients
-      f <- function(x) beta[1] + beta[2] * log(x/(1-x)) + 
+      m1 = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2))
+      beta = m1$coefficients
+      f = function(x) beta[1] + beta[2] * log(x/(1-x)) + 
         beta[3] * log(x/(1-x))^2 - max(Y)
-      flag <- flag2 <- try({
-        foo <- uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
-        ub <- foo$root
+      flag = flag2 = try({
+        foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+        ub = foo$root
         selected_model = m1
       }, silent = TRUE)
       
-      n_lwr <- n 
-      Ytil <- Y
-      Xtil <- 1 - (n_lwr:1 - 1/3)/(n_lwr + 1/3)
-      Wtil <- log(Xtil/(1-Xtil))
+      n_lwr = n 
+      Ytil = Y
+      Xtil = 1 - (n_lwr:1 - 1/3)/(n_lwr + 1/3)
+      Wtil = log(Xtil/(1-Xtil))
       while(class(flag) == "try-error" | class(flag2) == "try-error"){
-        Ytil <- Ytil[-n_lwr]
+        Ytil = Ytil[-n_lwr]
         if(any(tail(Ytil, k) < 0)){
-          ystarstar <- 6
+          ystarstar = 6
           break
         }
-        n_lwr <- n_lwr - 1
-        Xtil <- 1 - (n_lwr:1 - 1/3)/(n_lwr + 1/3)
-        Wtil <- log(Xtil/(1-Xtil))
-        m2 <- lm(tail(Ytil, k) ~ tail(Wtil, k) + I(tail(Wtil, k)^2))
-        beta <- m2$coefficients
-        f <- function(x) beta[1] + beta[2] * log(x/(1-x)) + 
+        n_lwr = n_lwr - 1
+        Xtil = 1 - (n_lwr:1 - 1/3)/(n_lwr + 1/3)
+        Wtil = log(Xtil/(1-Xtil))
+        m2 = lm(tail(Ytil, k) ~ tail(Wtil, k) + I(tail(Wtil, k)^2))
+        beta = m2$coefficients
+        f = function(x) beta[1] + beta[2] * log(x/(1-x)) + 
           beta[3] * log(x/(1-x))^2 - max(Ytil)
-        flag <- try({
-          foo <- uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
-          ub <- foo$root
+        flag = try({
+          foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+          ub = foo$root
           selected_model = m2
         }, silent = TRUE)
-        flag2 <- try({
-          g <- function(ystarstar) ub - Ftilde(y = Ytil, t = max(Ytil), ystarstar = ystarstar)
-          bar <- uniroot(g, c(0, 10), tol = 1e-10)
-          ystarstar <- bar$root
+        flag2 = try({
+          g = function(ystarstar) ub - Ftilde(y = Ytil, t = max(Ytil), ystarstar = ystarstar)
+          bar = uniroot(g, c(0, 10), tol = 1e-10)
+          ystarstar = bar$root
         }, silent = TRUE)
       }
-      ystarstar <- max(Y) - Y[n_lwr] + ystarstar
+      ystarstar = max(Y) - Y[n_lwr] + ystarstar
       
     }
   }
@@ -628,3 +628,65 @@ talent_computing_nonpara = function(ystarstar, y, npop){
   latent_talent = aptitude_nonpara(p = unlist(lapply(y, function(xx)
     Ftilde(y = y, t = xx, ystarstar = ystarstar))), npop = npop)
 }
+
+
+
+
+#' era_adjust_nonpara
+#'
+#' Maps a given latent talent to a common mapping environment 
+#' and gets the era-adjusted statistic using non-parametric approach
+#'
+#' @param anchor_talent Numeric. The latent talent value that we want to map onto the common mapping environment.
+#' @param talents_environ Numeric vector. Latent talent values in the common mapping environment.
+#' @param ytilde_environ Numeric vector. The surrogate points Ytilde defining the interpolated CDF of the common mapping environment.
+#' @param npop_environ Numeric. The talent pool size in the common mapping environment.
+#'
+#' @return Numeric value of the era-adjusted statistic
+#'
+#' @details
+#' Computes era-adjusted statistic using equation (2.7) from Yan et al. (2025, AOAS)
+#'
+#' @export
+era_adjust_nonpara = function(anchor_talent, talents_environ, ytilde_environ, npop_environ) {
+  
+  reverse_map_nonpara = function(talents, ytilde, npop) {
+    n = length(talents)
+    if(length(npop) == 1) npop = rep(npop, n)
+    
+    # order statistic CDF transformation i.e. F_{X_{m, (N_m - n_m + l_{i,j,m})}}
+    u = unlist(lapply(1:n, function(j){
+      pbeta(pnorm(talents[j]), j + npop[j] - n, n + 1 - j)
+    }))
+    
+    # convert to Beta order-uniform quantiles i.e. # F^{-1}_{U_{m,(l_{i,j,m})}}
+    a = qbeta(u, shape1 = 1:n, shape2 = n:1)
+    
+    # map the quantile through interpolated inverse CDF. i.e. \tilde{F}^{-1}_{Y_m}
+    map_Y = function(u, ytilde){
+      n = length(ytilde)-1
+      sequence = seq(0, 1, 1/n)
+      pos = findInterval(u, sequence)
+      out = (n*u -pos + 1) * (ytilde[(pos+1)] - ytilde[pos]) + ytilde[pos]
+      return(out)
+    }
+    out = sapply(1:n, function(x) map_Y(a[x], ytilde = ytilde))
+    out
+  }
+  
+  talent_all = sort(c(talents_environ, anchor_talent))
+  index_snippet = max(which(talent_all == anchor_talent))
+  
+  reverse_map_nonpara(x = talent_all, 
+                      ytilde = ytilde_environ, 
+                      npop = npop_environ)[index_snippet]
+  
+}
+
+
+
+
+
+
+
+

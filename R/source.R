@@ -677,7 +677,7 @@ era_adjust_nonpara = function(anchor_talent, talents_environ, ytilde_environ, np
   talent_all = sort(c(talents_environ, anchor_talent))
   index_snippet = max(which(talent_all == anchor_talent))
   
-  reverse_map_nonpara(x = talent_all, 
+  reverse_map_nonpara(talents = talent_all, 
                       ytilde = ytilde_environ, 
                       npop = npop_environ)[index_snippet]
   

@@ -112,7 +112,7 @@ aptitude_nonpara = function(p, npop){
 #' This function finds the optimal value of k based on input data
 #'
 #' @param x A numeric vector representing the input data
-#' @param method A string indicating use repo's version vs shen's local version
+#' @param method A string indicating use robust version (default) vs. original/legacy version
 #' @param stab A numeric value representing the stability parameter
 #' @param cutoff A numeric value representing the cutoff when deciding the tail. 
 #'
@@ -128,8 +128,8 @@ aptitude_nonpara = function(p, npop){
 #' @keywords optimization, modeling, linear approximation, order statistics
 #'
 #' @export
-k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
-  stopifnot(method %in% c('repo', 'shen'))
+k_finder = function(x, method = 'robust', stab = 0.01, cutoff = 1.4e-2) {
+  stopifnot(method %in% c('robust', 'legacy'))
   
   # obtain initial quantities for linear approximation
   Y = sort(as.matrix(x))
@@ -140,7 +140,7 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
   K1 = max(6, floor(1.3*sqrt(n)))
   K2 = 2*floor(log10(n)*sqrt(n))
   
-  search_range = if (method == 'repo') K1:min(c(K1+500,K2,n)) else 6:K2
+  search_range = if (method == 'robust') K1:min(c(K1+500,K2,n)) else 6:K2
 
   k_selector = try({
     do.call(rbind, lapply(search_range, function(k){
@@ -212,7 +212,7 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
                         k_selector_I0[b, ]$Rquad.sq))
       k = k_selector_I0[c(a,b)[ind] , 1]
     }
-    if (method == 'shen') {
+    if (method == 'legacy') {
       if (diff(Y)[n-1] > cutoff){ 
         k = max(k_selector_I0$k)
         if(k < 0) k = K2
@@ -223,10 +223,10 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
   # If try statement failed or procedure didn't obtain any k, then just use default value for k
   k_selector_failed = inherits(k_selector, "try-error") || (exists("k_selector_I0") && nrow(k_selector_I0) == 0)
   if (k_selector_failed) {
-    k = if (method == 'repo') min(K2, floor(n/2) - 1) else 6
+    k = if (method == 'robust') min(K2, floor(n/2) - 1) else 6
   }
   
-  if (method == 'shen') {
+  if (method == 'legacy') {
     if(length(k) == 0) k = round(mean(K1,K2))
     if(is.na(k)) k = round(mean(K1,K2))
     if(k == 0) k = round(mean(K1,K2))
@@ -251,7 +251,7 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
 #'
 #' @param x A numeric value representing the input data.
 #' @param k_info A list containing pieces related to the parameter k
-#' @param method A string indicating use repo's version vs shen's local version
+#' @param method A string indicating use robust version (default) vs. original/legacy version
 #' @param stab A numeric value representing the stability parameter.
 #' @param cutoff A numeric value representing the cutoff when deciding the tail. 
 #'
@@ -276,8 +276,8 @@ k_finder = function(x, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
 #' @keywords optimization, modeling, linear approximation, order statistics
 #'
 #' @export
-compute_ystarstar = function(x, k_info, method = 'repo', stab = 0.01, cutoff = 1.4e-2) {
-  stopifnot(method %in% c('repo', 'shen'))
+compute_ystarstar = function(x, k_info, method = 'robust', stab = 0.01, cutoff = 1.4e-2) {
+  stopifnot(method %in% c('robust', 'legacy'))
   
   Y = sort(as.matrix(x))
   n = length(Y)
@@ -287,13 +287,13 @@ compute_ystarstar = function(x, k_info, method = 'repo', stab = 0.01, cutoff = 1
   ystarstar = 10; ub = 0.999
   
   k = k_info$k
-  k_selector_I0 = k_info$k_selector_I0 # might be NULL. only used in shen's method
-  a = k_info$a # might be NULL. only used in shen's method
-  b = k_info$b # might be NULL. only used in shen's method
-  ind = k_info$ind # might be NULL. only used in shen's method
+  k_selector_I0 = k_info$k_selector_I0 # might be NULL. only used in method='legacy'
+  a = k_info$a # might be NULL. only used in method='legacy'
+  b = k_info$b # might be NULL. only used in method='legacy'
+  ind = k_info$ind # might be NULL. only used in method='legacy'
 
   ###################################################################
-  if (method == 'repo') {
+  if (method == 'robust') {
     models = list(
       m1 = lm(tail(Y, k) ~ tail(W, k)),
       m2 = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2))
@@ -406,7 +406,7 @@ compute_ystarstar = function(x, k_info, method = 'repo', stab = 0.01, cutoff = 1
   }
   
   ###################################################################
-  else { # method == 'shen'
+  else { # method == 'legacy'
     selected_model = NULL
     
     # find probability value using linear tail behavior

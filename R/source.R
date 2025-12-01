@@ -6,12 +6,13 @@
 #'
 #' @param y A numeric vector representing the input data.
 #' @param t A numeric value indicating the target value.
-#' @param ystar A numeric value representing an additional parameter.
+#' @param ystarstar A numeric value representing an additional parameter.
+#' @param ystar A numeric value representing an additional parameter
 #'
 #' @return A transformed value computed based on the input parameters.
 #'
 #' @details
-#' The Ftilde function computes a transformed value based on the input data vector `y`, a target value `t`, and an additional parameter `ystar`.
+#' The Ftilde function computes a transformed value based on the input data vector `y`, a target value `t`, and an additional parameters `ystarstar` and `ystar`.
 #'
 #' The algorithm sorts the input vector `y` and computes a new vector `ytilde` using a specific formula.
 #' Then, it computes the transformed value based on the relationship between `t` and the elements of `ytilde`.
@@ -24,18 +25,24 @@
 #'
 #' @examples
 #' # Example usage of the Ftilde function
-#' y <- c(1, 2, 3, 4, 5)
-#' t <- 3.5
-#' ystar <- 1
-#' Ftilde(y, t, ystar)
+#' y = c(1, 2, 3, 4, 5)
+#' t = 3.5
+#' ystarstar = 1
+#' ystar = 0.1
+#' Ftilde(y, t, ystarstar, ystar)
 #'
 #' @export
-Ftilde = function(y, t, ystar){
+Ftilde = function(y, t, ystarstar, ystar=NULL){
   y = sort(y)
   n = length(y)
   ytilde = rep(0, n + 1)
 
-  ytilde[n+1] = y[n] + ystar
+  if (is.null(ystar)) { # default value for ystar
+    ystar = y[2] - y[1]
+  }
+  ytilde[1] = y[1] - ystar
+  
+  ytilde[n+1] = y[n] + ystarstar
   ytilde[2:n] = unlist(lapply(2:n, function(j){
     (y[j]+y[j-1])/2
   }))
@@ -56,7 +63,6 @@ Ftilde = function(y, t, ystar){
 #'
 #' @param p A numeric vector representing percentiles of talent values.
 #' @param npop A numeric value representing the population size.
-#' @param cores Number of cores to be used for parallel processing. Default is 1.
 #' @return A numeric vector of talent values extracted from percentiles.
 #'
 #' @details
@@ -67,13 +73,11 @@ Ftilde = function(y, t, ystar){
 #' Then, it transforms these percentiles to Gaussian values corresponding to a general population of a greater than or equal size.
 #'
 #' The parameter `npop` represents the population size, which is used in the transformation process.
-#'In this implementation, the number of cores is set to 1 to ensure the code runs faster by avoiding the overhead
-#' associated with parallel processing.
 #'
 #' @keywords talent, percentiles
 #'
 #' @export
-aptitude_nonpara = function(p, npop, cores = 1){
+aptitude_nonpara = function(p, npop){
 
   #converts order stats to their percentiles
   order_pbino = function(p = 0, k = 1, n = 1e4) {
@@ -88,14 +92,14 @@ aptitude_nonpara = function(p, npop, cores = 1){
   n = length(p)
 
   #parallelize the computation of u
-  u <- unlist(lapply(1:n, function(j) {
+  u = unlist(lapply(1:n, function(j) {
     order_pbino(p[j], k = j, n = n)
   }))
 
   #transforms percentiles from order stats
   n = length(u)
   #parallelize the computation of latent_talent
-  latent_talent <- unlist(lapply(1:n, function(j) {
+  latent_talent = unlist(lapply(1:n, function(j) {
     qnorm(qbeta(u[j], j + npop - n, n + 1 - j))
   }))
 
@@ -108,7 +112,9 @@ aptitude_nonpara = function(p, npop, cores = 1){
 #' This function finds the optimal value of k based on input data
 #'
 #' @param x A numeric vector representing the input data
+#' @param method A string indicating use robust version (default) vs. original/legacy version
 #' @param stab A numeric value representing the stability parameter
+#' @param cutoff A numeric value representing the cutoff when deciding the tail. 
 #'
 #' @return A numeric vector containing the optimal value of k, along with values K1 and K2
 #'
@@ -122,18 +128,22 @@ aptitude_nonpara = function(p, npop, cores = 1){
 #' @keywords optimization, modeling, linear approximation, order statistics
 #'
 #' @export
-k_finder = function(x, stab = 0.0001) {
+k_finder = function(x, method = 'robust', stab = 0.01, cutoff = 1.4e-2) {
+  stopifnot(method %in% c('robust', 'legacy'))
+  
   # obtain initial quantities for linear approximation
   Y = sort(as.matrix(x))
   n = length(Y)
   Y[n] = Y[n] + stab # for stability
   pi = 1 - (n:1 - 1/3)/(n + 1/3)
   W = log(pi/(1-pi))
-  K1 = max(5, floor(1.3*sqrt(n)))
+  K1 = max(6, floor(1.3*sqrt(n)))
   K2 = 2*floor(log10(n)*sqrt(n))
+  
+  search_range = if (method == 'robust') K1:min(c(K1+500,K2,n)) else 6:K2
 
   k_selector = try({
-    do.call(rbind, lapply(K1:min(c(K1+500,K2,n)), function(k){
+    do.call(rbind, lapply(search_range, function(k){
       # Following Scholz (1995) Section 4
       Ytil = Y - median(Y)
       Ztil = tail(Ytil, k)
@@ -185,12 +195,8 @@ k_finder = function(x, stab = 0.0001) {
 
     }))
   }, silent = TRUE)
-
-  # If the try statement failed, then simply set k as K2 and finish.
-  if (inherits(k_selector, "try-error")) {
-    k = min(K2, floor(n/2) - 1)
-  }
-  else {
+  
+  if (!inherits(k_selector, "try-error")) {
     # restrict attention to all k values such that Tk in I0
     # (see Section 5 of Scholz (1995) for details).
     # pick k that has best "fit" as judged by the maximum
@@ -199,14 +205,41 @@ k_finder = function(x, stab = 0.0001) {
     colnames(k_selector) = c("k", "Tk", "I0", "I1", "R.sq", "Rquad.sq")
     k_selector = as.data.frame(k_selector)
     k_selector_I0 = k_selector[which(k_selector$I0 == 1), ]
-    a = which.max(k_selector_I0$R.sq)
-    b = which.max(k_selector_I0$Rquad.sq)
-    ind = which.max(c(k_selector_I0[a, ]$R.sq,
-                      k_selector_I0[b, ]$Rquad.sq))
-    k = k_selector_I0[c(a,b)[ind] , 1]
+    if (nrow(k_selector_I0) > 0) {
+      a = which.max(k_selector_I0$R.sq)
+      b = which.max(k_selector_I0$Rquad.sq)
+      ind = which.max(c(k_selector_I0[a, ]$R.sq,
+                        k_selector_I0[b, ]$Rquad.sq))
+      k = k_selector_I0[c(a,b)[ind] , 1]
+    }
+    if (method == 'legacy') {
+      if (diff(Y)[n-1] > cutoff){ 
+        k = max(k_selector_I0$k)
+        if(k < 0) k = K2
+      }
+    }
   }
-
-  c(k, K1, K2)
+  
+  # If try statement failed or procedure didn't obtain any k, then just use default value for k
+  k_selector_failed = inherits(k_selector, "try-error") || (exists("k_selector_I0") && nrow(k_selector_I0) == 0)
+  if (k_selector_failed) {
+    k = if (method == 'robust') min(K2, floor(n/2) - 1) else 6
+  }
+  
+  if (method == 'legacy') {
+    if(length(k) == 0) k = round(mean(K1,K2))
+    if(is.na(k)) k = round(mean(K1,K2))
+    if(k == 0) k = round(mean(K1,K2))
+    if(k >= n) k = K2
+  }
+  
+  return(list(k = k,
+              K1 = K1,
+              K2 = K2,
+              k_selector_I0 = if (!k_selector_failed) k_selector[which(k_selector$I0 == 1), ] else NULL,
+              a = if (!k_selector_failed) a else NULL,
+              b = if (!k_selector_failed) b else NULL,
+              ind = if (!k_selector_failed) ind else NULL))
 
 }
 
@@ -217,8 +250,10 @@ k_finder = function(x, stab = 0.0001) {
 #' probability modeling algorithm described in the Details section.
 #'
 #' @param x A numeric value representing the input data.
-#' @param k A numeric value representing the parameter k
-#' @param stab A numeric value representing the stability parameter. Default is 0.0001.
+#' @param k_info A list containing pieces related to the parameter k
+#' @param method A string indicating use robust version (default) vs. original/legacy version
+#' @param stab A numeric value representing the stability parameter.
+#' @param cutoff A numeric value representing the cutoff when deciding the tail. 
 #'
 #' @return A list containing the computed optimal value of ystarstar, along with auxiliary information.
 #'
@@ -241,40 +276,31 @@ k_finder = function(x, stab = 0.0001) {
 #' @keywords optimization, modeling, linear approximation, order statistics
 #'
 #' @export
-compute_ystarstar = function(x, k, stab = 0.0001) {
+compute_ystarstar = function(x, k_info, method = 'robust', stab = 0.01, cutoff = 1.4e-2) {
+  stopifnot(method %in% c('robust', 'legacy'))
+  
   Y = sort(as.matrix(x))
   n = length(Y)
   Y[n] = Y[n] + stab # for stability
   pi = 1 - (n:1 - 1/3)/(n + 1/3)
-  X = W = log(pi/(1-pi))
-  ystar = 10; ub = 0.999
+  W = log(pi/(1-pi))
+  ystarstar = 10; ub = 0.999
+  
+  k = k_info$k
+  k_selector_I0 = k_info$k_selector_I0 # might be NULL. only used in method='legacy'
+  a = k_info$a # might be NULL. only used in method='legacy'
+  b = k_info$b # might be NULL. only used in method='legacy'
+  ind = k_info$ind # might be NULL. only used in method='legacy'
 
-  models = list(
-    m1 = lm(tail(Y, k) ~ tail(W, k)),
-    m2 = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2))
-  )
-
-  models = models[names(sort(sapply(models, BIC)))]
-  selected_model = models[[1]]
-  f = function(w) {
-    max(Y) - predict(selected_model, newdata = data.frame(W = w))
-  }
-  flag = try({
-    ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
-    ub = 1/(1 + exp(-ub_w))
-  }, silent = TRUE)
-  #plot(tail(W, k), tail(Y, k))
-  #lines(tail(W, k), predict(selected_model))
-  if(class(flag) != "try-error"){
-    try({
-      g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
-      bar = uniroot(g, c(0, 100), tol = 1e-10)
-      ystar = bar$root
-    }, silent = TRUE)
-  }
-
-  if(ystar == 10) {
-    selected_model = models[[2]]
+  ###################################################################
+  if (method == 'robust') {
+    models = list(
+      m1 = lm(tail(Y, k) ~ tail(W, k)),
+      m2 = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2))
+    )
+    
+    models = models[names(sort(sapply(models, BIC)))]
+    selected_model = models[[1]]
     f = function(w) {
       max(Y) - predict(selected_model, newdata = data.frame(W = w))
     }
@@ -286,38 +312,13 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
     #lines(tail(W, k), predict(selected_model))
     if(class(flag) != "try-error"){
       try({
-        g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
+        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
         bar = uniroot(g, c(0, 100), tol = 1e-10)
-        ystar = bar$root
+        ystarstar = bar$root
       }, silent = TRUE)
     }
-  }
-
-  models = list(
-    m1 = lm(tail(Y, k) ~ log(tail(W, k))),
-    m2 = lm(tail(Y, k) ~ log(tail(W, k)) + I(log(tail(W, k))^2))
-  )
-
-  if(any(BIC(selected_model) > sapply(models, BIC))) {
-    models = models[names(sort(sapply(models, BIC)))]
-    selected_model = models[[1]]
-    f = function(w) {
-      max(Y) - predict(selected_model, newdata = data.frame(W = w))
-    }
-    flag = try({
-      ub_w = uniroot(f, c(max(W)-0.5, max(W)+2), tol = 1e-10)$root
-      ub = 1/(1 + exp(-ub_w))
-    }, silent = TRUE)
-    #plot(log(tail(W, k)), tail(Y, k))
-    #lines(log(tail(W, k)), predict(selected_model))
-    if(class(flag) != "try-error"){
-      try({
-        g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
-        bar = uniroot(g, c(0, 100), tol = 1e-10)
-        ystar = bar$root
-      }, silent = TRUE)
-    }
-    if(ystar == 10) {
+    
+    if(ystarstar == 10) {
       selected_model = models[[2]]
       f = function(w) {
         max(Y) - predict(selected_model, newdata = data.frame(W = w))
@@ -330,49 +331,289 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
       #lines(tail(W, k), predict(selected_model))
       if(class(flag) != "try-error"){
         try({
-          g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
+          g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
           bar = uniroot(g, c(0, 100), tol = 1e-10)
-          ystar = bar$root
+          ystarstar = bar$root
+        }, silent = TRUE)
+      }
+    }
+    
+    models = list(
+      m1 = lm(tail(Y, k) ~ log(tail(W, k))),
+      m2 = lm(tail(Y, k) ~ log(tail(W, k)) + I(log(tail(W, k))^2))
+    )
+    
+    if(any(BIC(selected_model) > sapply(models, BIC))) {
+      models = models[names(sort(sapply(models, BIC)))]
+      selected_model = models[[1]]
+      f = function(w) {
+        max(Y) - predict(selected_model, newdata = data.frame(W = w))
+      }
+      flag = try({
+        ub_w = uniroot(f, c(max(W)-0.5, max(W)+2), tol = 1e-10)$root
+        ub = 1/(1 + exp(-ub_w))
+      }, silent = TRUE)
+      #plot(log(tail(W, k)), tail(Y, k))
+      #lines(log(tail(W, k)), predict(selected_model))
+      if(class(flag) != "try-error"){
+        try({
+          g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+          bar = uniroot(g, c(0, 100), tol = 1e-10)
+          ystarstar = bar$root
+        }, silent = TRUE)
+      }
+      if(ystarstar == 10) {
+        selected_model = models[[2]]
+        f = function(w) {
+          max(Y) - predict(selected_model, newdata = data.frame(W = w))
+        }
+        flag = try({
+          ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
+          ub = 1/(1 + exp(-ub_w))
+        }, silent = TRUE)
+        #plot(tail(W, k), tail(Y, k))
+        #lines(tail(W, k), predict(selected_model))
+        if(class(flag) != "try-error"){
+          try({
+            g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+            bar = uniroot(g, c(0, 100), tol = 1e-10)
+            ystarstar = bar$root
+          }, silent = TRUE)
+        }
+      }
+    }
+    
+    if(ystarstar == 10 ) {
+      selected_model = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2) +
+                            I(tail(W, k)^3))
+      f = function(w) {
+        max(Y) - predict(selected_model, newdata = data.frame(W = w))
+      }
+      flag = try({
+        ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
+        ub = 1/(1 + exp(-ub_w))
+      }, silent = TRUE)
+      #plot(tail(W, k), tail(Y, k))
+      #lines(tail(W, k), predict(selected_model))
+      if(class(flag) != "try-error"){
+        try({
+          g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+          bar = uniroot(g, c(0, 100), tol = 1e-10)
+          ystarstar = bar$root
         }, silent = TRUE)
       }
     }
   }
-
-  if(ystar == 10 ) {
-    selected_model = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2) +
-                          I(tail(W, k)^3))
-    f = function(w) {
-      max(Y) - predict(selected_model, newdata = data.frame(W = w))
-    }
-    flag = try({
-      ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
-      ub = 1/(1 + exp(-ub_w))
-    }, silent = TRUE)
-    #plot(tail(W, k), tail(Y, k))
-    #lines(tail(W, k), predict(selected_model))
-    if(class(flag) != "try-error"){
+  
+  ###################################################################
+  else { # method == 'legacy'
+    selected_model = NULL
+    
+    # find probability value using linear tail behavior
+    Z = tail(Y, k)
+    m1 = lm(tail(Y, k) ~ tail(pi, k))
+    beta = m1$coefficients
+    ystarstar = 0
+    ub = 0
+    f = function(x) beta[1] + beta[2] * x - max(Y)
+    #delta = beta[2]
+    try({
+      foo = uniroot(f, c(0.0001, 5), tol = 1e-10)
+      ub = foo$root
+      selected_model = m1
+    })
+    
+    # find probability value using logistic tail behavior
+    if(ub >= 1){
+      m1 = lm(tail(Y,k) ~ tail(W, k))
+      beta = m1$coefficients
+      f = function(x) beta[1] + beta[2] * log(x/(1-x)) - max(Y)
       try({
-        g = function(ystar) ub - Ftilde(y = Y, t = max(Y), ystar = ystar)
-        bar = uniroot(g, c(0, 100), tol = 1e-10)
-        ystar = bar$root
+        foo = uniroot(f, c(0.000001, 0.999999), tol = 1e-10)
+        ub = foo$root
+        selected_model = m1
+      })  
+    }
+    
+    # if possible, find ystarstar by tying logistic behavior argument to 
+    # our Ftilde function
+    if(ub >= Ftilde(y = Y, t = max(Y), ystarstar = 10)){
+      try({
+        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+        bar = uniroot(g, c(0, 10), tol = 1e-10)
+        ystarstar = bar$root
+      })
+    }
+    
+    # if the above is not possible, try a similar approach for different 
+    # suitable values of k. 
+    #
+    # The above fails because ub < Ftilde(y = Y, t = max(Y), ystarstar = 10) 
+    # suggesting that the largest achiever is performing much worse than 
+    # expected. Thus ystarstar should be "large". A default large value will 
+    # be ystarstar = 6 (altered to be log(1 + 6) for stability). This will 
+    # be used when all else fails.
+    flag = NULL
+    if(ub < Ftilde(y = Y, t = max(Y), ystarstar = 10) & !is.null(k_selector_I0)){
+      
+      # first try for largest suitable k as dictated by Scholz Section 3
+      k = max(k_selector_I0$k) 
+      m1 = lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
+      beta = m1$coefficients
+      f = function(x) beta[1] + beta[2] * log(x/(1-x)) +
+        beta[3] * log(x/(1-x))^2 - max(Y)
+      flag = try({
+        foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+        ub = foo$root
+        selected_model = m1
       }, silent = TRUE)
+      
+      while(class(flag) == "try-error"){
+        k = k - 1
+        # method fails; use ystarstar = 4
+        if(k < 6){
+          ystarstar = 6
+          break
+        }
+        m1 = lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
+        beta = m1$coefficients
+        f = function(x) beta[1] + beta[2] * log(x/(1-x)) +
+          beta[3] * log(x/(1-x))^2 - max(Y)
+        flag = try({
+          foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+          ub = foo$root
+          selected_model = m1
+        }, silent = TRUE)
+      }
+      
+      ystarstar_1 = NULL
+      try({
+        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+        bar = uniroot(g, c(0, 10), tol = 1e-10)
+        ystarstar_1 = bar$root    	
+      }, silent = TRUE)
+      if(length(ystarstar_1) == 0) ystarstar_1 = 6
+      
+      
+      # now try for smallest suitable k as dictated by Scholz Section 3
+      k = min(k_selector_I0$k)
+      if(length(k) == 0) k = 6
+      m1 = lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
+      beta = m1$coefficients
+      f = function(x) beta[1] + beta[2] * log(x/(1-x)) + 
+        beta[3] * log(x/(1-x))^2 - max(Y)
+      flag = try({
+        foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+        ub = foo$root
+        selected_model = m1
+      }, silent = TRUE)  
+      while(class(flag) == "try-error"){
+        k = k + 1
+        # method fails; use ystarstar = 4
+        if(k > max(k_selector_I0$k)){
+          ystarstar = 6
+          break
+        }
+        m1 = lm(tail(Y,k) ~ tail(W, k) + I(tail(W, k)^2))
+        beta = m1$coefficients
+        f = function(x) beta[1] + beta[2] * log(x/(1-x)) + 
+          beta[3] * log(x/(1-x))^2 - max(Y)
+        flag = try({
+          foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+          ub = foo$root   
+          selected_model = m1
+        }, silent = TRUE)  
+      }
+      
+      ystarstar_2 = NULL
+      try({
+        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+        bar = uniroot(g, c(0, 10), tol = 1e-10)
+        ystarstar_2 = bar$root			
+      }, silent = TRUE)
+      if(length(ystarstar_2) == 0) ystarstar_2 = 6
+      
+      # take ystarstar as the average of the lowest working k and 
+      # largest working k
+      ystarstar = mean(c(ystarstar_1, ystarstar_2))
+      
+    }
+    
+    # if changing k does not work, then try throwing out extreme 
+    # observations and computing ystarstar for the reduced sample (Ytil)
+    #
+    # then compute ystarstar = max(Y) - max(Ytil) + ystarstar*
+    #
+    # where ystarstar* is computed with respect to Ytil
+    if(ystarstar == 6 & !is.null(k_selector_I0)){
+      k = k_selector_I0[c(a,b)[ind] , 1]
+      if(diff(Y)[n-1] > cutoff){ 
+        k = max(k_selector_I0$k)
+        if(k < 0) k = K2
+      }
+      if(length(k) == 0) k = round(mean(K1,K2))
+      if(is.na(k)) k = round(mean(K1,K2))
+      if(k == 0) k = round(mean(K1,K2))
+      if(k >= n) k = K2
+      
+      m1 = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2))
+      beta = m1$coefficients
+      f = function(x) beta[1] + beta[2] * log(x/(1-x)) + 
+        beta[3] * log(x/(1-x))^2 - max(Y)
+      flag = flag2 = try({
+        foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+        ub = foo$root
+        selected_model = m1
+      }, silent = TRUE)
+      
+      n_lwr = n 
+      Ytil = Y
+      Xtil = 1 - (n_lwr:1 - 1/3)/(n_lwr + 1/3)
+      Wtil = log(Xtil/(1-Xtil))
+      while(class(flag) == "try-error" | class(flag2) == "try-error"){
+        Ytil = Ytil[-n_lwr]
+        if(any(tail(Ytil, k) < 0)){
+          ystarstar = 6
+          break
+        }
+        n_lwr = n_lwr - 1
+        Xtil = 1 - (n_lwr:1 - 1/3)/(n_lwr + 1/3)
+        Wtil = log(Xtil/(1-Xtil))
+        m2 = lm(tail(Ytil, k) ~ tail(Wtil, k) + I(tail(Wtil, k)^2))
+        beta = m2$coefficients
+        f = function(x) beta[1] + beta[2] * log(x/(1-x)) + 
+          beta[3] * log(x/(1-x))^2 - max(Ytil)
+        flag = try({
+          foo = uniroot(f, c(0.0001, 0.9999), tol = 1e-10)
+          ub = foo$root
+          selected_model = m2
+        }, silent = TRUE)
+        flag2 = try({
+          g = function(ystarstar) ub - Ftilde(y = Ytil, t = max(Ytil), ystarstar = ystarstar)
+          bar = uniroot(g, c(0, 10), tol = 1e-10)
+          ystarstar = bar$root
+        }, silent = TRUE)
+      }
+      ystarstar = max(Y) - Y[n_lwr] + ystarstar
+      
     }
   }
-
-  ## output
-  out = list(ystar = ystar,
+  
+  # Output
+  out = list(ystarstar = ystarstar,
              model = selected_model,
              Y = tail(Y, k),
              pi = tail(pi, k),
              W = tail(W, k))
-  out
+  return(out)
+  
 }
 
 #' talent_computing_nonpara
 #'
 #' Estimate underlying talent values using a non-parametric method.
 #'
-#' @param ystar Numeric. Additional parameter for talent estimation.
+#' @param ystarstar Numeric. Additional parameter for talent estimation.
 #' @param y Numeric vector. Observed statistic, arranged from highest to lowest.
 #' @param npop Numeric. Population size.
 #'
@@ -382,8 +623,70 @@ compute_ystarstar = function(x, k, stab = 0.0001) {
 #' Computes talent values for `y` using `Ftilde()` and `aptitude_nonpara()`.
 #'
 #' @export
-talent_computing_nonpara = function(ystar, y, npop){
+talent_computing_nonpara = function(ystarstar, y, npop){
   ## latent talent
   latent_talent = aptitude_nonpara(p = unlist(lapply(y, function(xx)
-    Ftilde(y = y, t = xx, ystar = ystar))), npop = npop)
+    Ftilde(y = y, t = xx, ystarstar = ystarstar))), npop = npop)
 }
+
+
+
+
+#' era_adjust_nonpara
+#'
+#' Maps a given latent talent to a common mapping environment 
+#' and gets the era-adjusted statistic using non-parametric approach
+#'
+#' @param anchor_talent Numeric. The latent talent value that we want to map onto the common mapping environment.
+#' @param talents_environ Numeric vector. Latent talent values in the common mapping environment.
+#' @param ytilde_environ Numeric vector. The surrogate points Ytilde defining the interpolated CDF of the common mapping environment.
+#' @param npop_environ Numeric. The talent pool size in the common mapping environment.
+#'
+#' @return Numeric value of the era-adjusted statistic
+#'
+#' @details
+#' Computes era-adjusted statistic using equation (2.7) from Yan et al. (2025, AOAS)
+#'
+#' @export
+era_adjust_nonpara = function(anchor_talent, talents_environ, ytilde_environ, npop_environ) {
+  
+  reverse_map_nonpara = function(talents, ytilde, npop) {
+    n = length(talents)
+    if(length(npop) == 1) npop = rep(npop, n)
+    
+    # order statistic CDF transformation i.e. F_{X_{m, (N_m - n_m + l_{i,j,m})}}
+    u = unlist(lapply(1:n, function(j){
+      pbeta(pnorm(talents[j]), j + npop[j] - n, n + 1 - j)
+    }))
+    
+    # convert to Beta order-uniform quantiles i.e. # F^{-1}_{U_{m,(l_{i,j,m})}}
+    a = qbeta(u, shape1 = 1:n, shape2 = n:1)
+    
+    # map the quantile through interpolated inverse CDF. i.e. \tilde{F}^{-1}_{Y_m}
+    map_Y = function(u, ytilde){
+      n = length(ytilde)-1
+      sequence = seq(0, 1, 1/n)
+      pos = findInterval(u, sequence)
+      out = (n*u -pos + 1) * (ytilde[(pos+1)] - ytilde[pos]) + ytilde[pos]
+      return(out)
+    }
+    out = sapply(1:n, function(x) map_Y(a[x], ytilde = ytilde))
+    out
+  }
+  
+  talent_all = sort(c(talents_environ, anchor_talent))
+  index_snippet = max(which(talent_all == anchor_talent))
+  
+  reverse_map_nonpara(talents = talent_all, 
+                      ytilde = ytilde_environ, 
+                      npop = npop_environ)[index_snippet]
+  
+}
+
+
+
+
+
+
+
+

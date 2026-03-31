@@ -1,5 +1,3 @@
-
-
 #' Ftilde Function
 #'
 #' This function computes a transformed value based on the input parameters.
@@ -305,12 +303,12 @@ compute_ystarstar = function(x, k_info, method = 'robust', stab = 0.01, cutoff =
         return(c(mean(c(tail(W, 2)[1], max(W))), max(W) + 2))
       } else {
         # max point is below curve — crossing is earlier, before max(W)
-        return(c(4, max(W)))
+        return(c(2, max(W)))
       }
     }
     
-    models = list(m1 = lm(tail(Y, k) ~ tail(W, k)), m2 = lm(tail(Y, 
-                                                                 k) ~ tail(W, k) + I(tail(W, k)^2)))
+    models = list(m1 = lm(tail(Y, k) ~ tail(W, k)), 
+                  m2 = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2)))
     models = models[names(sort(sapply(models, BIC)))]
     selected_model = models[[1]]
     f = function(w) {
@@ -349,8 +347,8 @@ compute_ystarstar = function(x, k_info, method = 'robust', stab = 0.01, cutoff =
       }
     }
     models = list(m1 = lm(tail(Y, k) ~ log(tail(W, k))), 
-                  m2 = lm(tail(Y, k) ~ log(tail(W, k)) + I(log(tail(W, 
-                                                                    k))^2)))
+                  m2 = lm(tail(Y, k) ~ log(tail(W, k)) + 
+                          I(log(tail(W, k))^2)))
     if (any(BIC(selected_model) > sapply(models, BIC))) {
       models = models[names(sort(sapply(models, BIC)))]
       selected_model = models[[1]]
@@ -391,8 +389,8 @@ compute_ystarstar = function(x, k_info, method = 'robust', stab = 0.01, cutoff =
       }
     }
     if (ystarstar == 10) {
-      selected_model = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, 
-                                                           k)^2) + I(tail(W, k)^3))
+      selected_model = lm(tail(Y, k) ~ tail(W, k) + 
+                          I(tail(W, k)^2) + I(tail(W, k)^3))
       f = function(w) {
         max(Y) - predict(selected_model, newdata = data.frame(W = w))
       }

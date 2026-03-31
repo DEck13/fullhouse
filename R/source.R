@@ -295,101 +295,116 @@ compute_ystarstar = function(x, k_info, method = 'robust', stab = 0.01, cutoff =
   ind = k_info$ind # might be NULL. only used in method='legacy'
 
   ###################################################################
-  if (method == 'robust') {
-    models = list(
-      m1 = lm(tail(Y, k) ~ tail(W, k)),
-      m2 = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2))
-    )
-
+  if (method == "robust") {
+    
+    # Helper: choose search interval based on whether max point is below or above the curve
+    get_search_interval = function(model, W, Y) {
+      at_max_W = predict(model, newdata = data.frame(W = max(W)))
+      if (max(Y) > at_max_W) {
+        # max point is above curve — crossing is far out in tail
+        return(c(mean(c(tail(W, 2)[1], max(W))), max(W) + 2))
+      } else {
+        # max point is below curve — crossing is earlier, before max(W)
+        return(c(4, max(W)))
+      }
+    }
+    
+    models = list(m1 = lm(tail(Y, k) ~ tail(W, k)), m2 = lm(tail(Y, 
+                                                                 k) ~ tail(W, k) + I(tail(W, k)^2)))
     models = models[names(sort(sapply(models, BIC)))]
     selected_model = models[[1]]
     f = function(w) {
       max(Y) - predict(selected_model, newdata = data.frame(W = w))
     }
     flag = try({
-      ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
+      ub_w = uniroot(f, get_search_interval(selected_model, W, Y), 
+                     tol = 1e-10)$root
       ub = 1/(1 + exp(-ub_w))
     }, silent = TRUE)
-    if(class(flag) != "try-error"){
+    if (class(flag) != "try-error") {
       try({
-        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+        g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), 
+                                            ystarstar = ystarstar)
         bar = uniroot(g, c(0, 100), tol = 1e-10)
         ystarstar = bar$root
       }, silent = TRUE)
     }
-
-    if(ystarstar == 10) {
+    if (ystarstar == 10) {
       selected_model = models[[2]]
       f = function(w) {
         max(Y) - predict(selected_model, newdata = data.frame(W = w))
       }
       flag = try({
-        ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
+        ub_w = uniroot(f, get_search_interval(selected_model, W, Y), 
+                       tol = 1e-10)$root
         ub = 1/(1 + exp(-ub_w))
       }, silent = TRUE)
-      if(class(flag) != "try-error"){
+      if (class(flag) != "try-error") {
         try({
-          g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+          g = function(ystarstar) ub - Ftilde(y = Y, 
+                                              t = max(Y), ystarstar = ystarstar)
           bar = uniroot(g, c(0, 100), tol = 1e-10)
           ystarstar = bar$root
         }, silent = TRUE)
       }
     }
-
-    models = list(
-      m1 = lm(tail(Y, k) ~ log(tail(W, k))),
-      m2 = lm(tail(Y, k) ~ log(tail(W, k)) + I(log(tail(W, k))^2))
-    )
-
-    if(any(BIC(selected_model) > sapply(models, BIC))) {
+    models = list(m1 = lm(tail(Y, k) ~ log(tail(W, k))), 
+                  m2 = lm(tail(Y, k) ~ log(tail(W, k)) + I(log(tail(W, 
+                                                                    k))^2)))
+    if (any(BIC(selected_model) > sapply(models, BIC))) {
       models = models[names(sort(sapply(models, BIC)))]
       selected_model = models[[1]]
       f = function(w) {
         max(Y) - predict(selected_model, newdata = data.frame(W = w))
       }
       flag = try({
-        ub_w = uniroot(f, c(max(W)-0.5, max(W)+2), tol = 1e-10)$root
+        ub_w = uniroot(f, get_search_interval(selected_model, W, Y), 
+                       tol = 1e-10)$root
         ub = 1/(1 + exp(-ub_w))
       }, silent = TRUE)
-      if(class(flag) != "try-error"){
+      if (class(flag) != "try-error") {
         try({
-          g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+          g = function(ystarstar) ub - Ftilde(y = Y, 
+                                              t = max(Y), ystarstar = ystarstar)
           bar = uniroot(g, c(0, 100), tol = 1e-10)
           ystarstar = bar$root
         }, silent = TRUE)
       }
-      if(ystarstar == 10) {
+      if (ystarstar == 10) {
         selected_model = models[[2]]
         f = function(w) {
           max(Y) - predict(selected_model, newdata = data.frame(W = w))
         }
         flag = try({
-          ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
+          ub_w = uniroot(f, get_search_interval(selected_model, W, Y), 
+                         tol = 1e-10)$root
           ub = 1/(1 + exp(-ub_w))
         }, silent = TRUE)
-        if(class(flag) != "try-error"){
+        if (class(flag) != "try-error") {
           try({
-            g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+            g = function(ystarstar) ub - Ftilde(y = Y, 
+                                                t = max(Y), ystarstar = ystarstar)
             bar = uniroot(g, c(0, 100), tol = 1e-10)
             ystarstar = bar$root
           }, silent = TRUE)
         }
       }
     }
-
-    if(ystarstar == 10 ) {
-      selected_model = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, k)^2) +
-                            I(tail(W, k)^3))
+    if (ystarstar == 10) {
+      selected_model = lm(tail(Y, k) ~ tail(W, k) + I(tail(W, 
+                                                           k)^2) + I(tail(W, k)^3))
       f = function(w) {
         max(Y) - predict(selected_model, newdata = data.frame(W = w))
       }
       flag = try({
-        ub_w = uniroot(f, c(mean(c(tail(W, 2)[1], max(W))), max(W)+2), tol = 1e-10)$root
+        ub_w = uniroot(f, get_search_interval(selected_model, W, Y), 
+                       tol = 1e-10)$root
         ub = 1/(1 + exp(-ub_w))
       }, silent = TRUE)
-      if(class(flag) != "try-error"){
+      if (class(flag) != "try-error") {
         try({
-          g = function(ystarstar) ub - Ftilde(y = Y, t = max(Y), ystarstar = ystarstar)
+          g = function(ystarstar) ub - Ftilde(y = Y, 
+                                              t = max(Y), ystarstar = ystarstar)
           bar = uniroot(g, c(0, 100), tol = 1e-10)
           ystarstar = bar$root
         }, silent = TRUE)

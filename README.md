@@ -1,4 +1,4 @@
-# fullhouse (v1.1)
+# fullhouse (v1.2)
 
 `fullhouse` is an R package containing scripts for performing Full House Modeling and data sets. These data sets include era-adjusted statistics for baseball players and preliminary data for an analysis for historical figures.
 
@@ -30,6 +30,10 @@ generated via Full House Modeling. To explore these stats:
 
 This vignette and additional content on era-adjustment modeling for historical impact can be found at [this GitHub repo](https://github.com/DEck13/historical-impact-resources/).
 
+
+## v1.2
+
+We fixed an issue where polynomial tail probability models could produce incorrect results due to improper root-finding intervals. The search interval is now chosen adaptively based on the relationship between the observed maximum and the fitted tail curve. This improves stability and ensures valid solutions when estimating tail behavior. 
 
 ## v1.1 
 

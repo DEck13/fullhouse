@@ -305,7 +305,7 @@ compute_ystarstar = function(x, k_info, method = 'robust', stab = 0.01, cutoff =
         return(c(mean(c(tail(W, 2)[1], max(W))), max(W) + 2))
       } else {
         # max point is below curve — crossing is earlier, before max(W)
-        return(c(4, max(W)))
+        return(c(0, max(W)))
       }
     }
     

@@ -5,7 +5,7 @@
 \alias{talentpool}
 \title{MLB Talent Pool}
 \format{
-A tibble with 154 observations of 3 variables:
+A tibble with 155 observations of 3 variables:
 \itemize{
 \item year: a numeric vector for year.
 \item NLpop: a numeric vector for the talent pool size for the NL.
@@ -13,15 +13,15 @@ A tibble with 154 observations of 3 variables:
 }
 }
 \source{
-See \href{https://eckeraadjustment.web.illinois.edu/MLBeligiblepop.html}{this technical report}
+See \href{https://eckeraadjustment.web.illinois.edu/MLB-talent-pool-v3.0.html}{this technical report}
 for details on how these estimates of the talent pool were constructed from
-1871 to 2020. The talent pool sizes from from 2021-2024 are calculated by linear extrapolation.
+1871 to 2025.
 }
 \usage{
 data(talentpool)
 }
 \description{
 This dataset contains the talent pool for the American League (AL) and
-National League (NL) from 1871 to 2024.
+National League (NL) from 1871 to 2025.
 }
 \keyword{datasets}

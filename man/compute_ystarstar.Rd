@@ -4,14 +4,18 @@
 \alias{compute_ystarstar}
 \title{compute_ystarstar Function}
 \usage{
-compute_ystarstar(x, k, stab = 1e-04)
+compute_ystarstar(x, k_info, method = "robust", stab = 0.01, cutoff = 0.014)
 }
 \arguments{
 \item{x}{A numeric value representing the input data.}
 
-\item{k}{A numeric value representing the parameter k}
+\item{k_info}{A list containing pieces related to the parameter k}
 
-\item{stab}{A numeric value representing the stability parameter. Default is 0.0001.}
+\item{method}{A string indicating use robust version (default) vs. original/legacy version}
+
+\item{stab}{A numeric value representing the stability parameter.}
+
+\item{cutoff}{A numeric value representing the cutoff when deciding the tail.}
 }
 \value{
 A list containing the computed optimal value of ystarstar, along with auxiliary information.

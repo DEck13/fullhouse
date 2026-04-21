@@ -4,14 +4,16 @@
 \alias{Ftilde}
 \title{Ftilde Function}
 \usage{
-Ftilde(y, t, ystar)
+Ftilde(y, t, ystarstar, ystar = NULL)
 }
 \arguments{
 \item{y}{A numeric vector representing the input data.}
 
 \item{t}{A numeric value indicating the target value.}
 
-\item{ystar}{A numeric value representing an additional parameter.}
+\item{ystarstar}{A numeric value representing an additional parameter.}
+
+\item{ystar}{A numeric value representing an additional parameter}
 }
 \value{
 A transformed value computed based on the input parameters.
@@ -20,7 +22,7 @@ A transformed value computed based on the input parameters.
 This function computes a transformed value based on the input parameters.
 }
 \details{
-The Ftilde function computes a transformed value based on the input data vector \code{y}, a target value \code{t}, and an additional parameter \code{ystar}.
+The Ftilde function computes a transformed value based on the input data vector \code{y}, a target value \code{t}, and an additional parameters \code{ystarstar} and \code{ystar}.
 
 The algorithm sorts the input vector \code{y} and computes a new vector \code{ytilde} using a specific formula.
 Then, it computes the transformed value based on the relationship between \code{t} and the elements of \code{ytilde}.
@@ -31,10 +33,11 @@ Otherwise, it computes the transformed value based on the position of \code{t} r
 }
 \examples{
 # Example usage of the Ftilde function
-y <- c(1, 2, 3, 4, 5)
-t <- 3.5
-ystar <- 1
-Ftilde(y, t, ystar)
+y = c(1, 2, 3, 4, 5)
+t = 3.5
+ystarstar = 1
+ystar = 0.1
+Ftilde(y, t, ystarstar, ystar)
 
 }
 \keyword{algorithm,}

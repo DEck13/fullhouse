@@ -4,12 +4,24 @@
 \alias{k_finder}
 \title{k_finder Function}
 \usage{
-k_finder(x, stab = 1e-04)
+k_finder(
+  x,
+  method = "robust",
+  outlier_handling = "FALSE",
+  stab = 0.01,
+  cutoff = 0.014
+)
 }
 \arguments{
 \item{x}{A numeric vector representing the input data}
 
+\item{method}{A string indicating use robust version (default) vs. original/legacy version}
+
+\item{outlier_handling}{A logical value; if TRUE, increases k to amplify the influence of extreme values so that potential outliers are more pronounced.}
+
 \item{stab}{A numeric value representing the stability parameter}
+
+\item{cutoff}{A numeric value representing the cutoff when deciding the tail.}
 }
 \value{
 A numeric vector containing the optimal value of k, along with values K1 and K2

@@ -3,27 +3,26 @@
 \docType{data}
 \name{pitchers_adjusted}
 \alias{pitchers_adjusted}
-\title{Era-adjusted Pitchers Career Dataset}
+\title{Era-Adjusted Pitchers Season Dataset}
 \format{
-A data frame with 31501 rows and 10 variables:
+A data frame with 28739 rows and 9 variables:
 \itemize{
+\item name: a character vector containing the name of the player.
 \item playerID: The unique ID of the player.
-\item name:  a character vector containing the name of the player.
-\item age: The age of the player during the season (e.g., integer).
-\item year: The season year (e.g., integer).
-\item IP: Innings pitched, the total number of innings the pitcher has thrown (e.g., numeric).
-\item ER:Earned Runs, the number of runs that scored against a pitcher that were not a result of fielding errors.
-\item ERA: Earned Run Average, calculated as (9 * ER)/IP (e.g., numeric).
-\item K:strikeout, the number of times a pitcher struck out a batter.
-\item ebWAR: career era-adjusted wins above replacement as computed by Baseball Reference.
-\item efWAR: career era-adjusted wins above replacement as computed by FanGraphs.
+\item year: The season year (integer).
+\item age: The age of the player during the season (integer).
+\item eIP: Innings pitched, the total number of innings the pitcher has thrown (numeric).
+\item eERA: Earned Run Average, calculated as (9 * eER)/eIP (numeric).
+\item eSO: strikeout, the number of times a pitcher struck out a batter (integer).
+\item ebWAR: era-adjusted wins above replacement as computed by Baseball Reference (numeric).
+\item efWAR: era-adjusted wins above replacement as computed by FanGraphs (numeric).
 }
 }
 \usage{
 data(pitchers_adjusted)
 }
 \description{
-A dataset containing era-adjusted season statistics for pitchers up to 2024.
+A dataset containing era-adjusted season statistics for pitchers up to 2025.
 }
 \details{
 These era-adjusted statistics are obtained from Full House Modeling.

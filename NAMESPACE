@@ -3,6 +3,6 @@
 export(Ftilde)
 export(aptitude_nonpara)
 export(compute_ystarstar)
+export(era_adjust_nonpara)
 export(k_finder)
 export(talent_computing_nonpara)
-export(era_adjust_nonpara)

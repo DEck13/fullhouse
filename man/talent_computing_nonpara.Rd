@@ -4,16 +4,14 @@
 \alias{talent_computing_nonpara}
 \title{talent_computing_nonpara}
 \usage{
-talent_computing_nonpara(ystar, y, npop, alpha = 1.16)
+talent_computing_nonpara(ystarstar, y, npop)
 }
 \arguments{
-\item{ystar}{Numeric. Additional parameter for talent estimation.}
+\item{ystarstar}{Numeric. Additional parameter for talent estimation.}
 
 \item{y}{Numeric vector. Observed statistic, arranged from highest to lowest.}
 
 \item{npop}{Numeric. Population size.}
-
-\item{alpha}{Numeric. Pareto shape parameter. Default is 1.16.}
 }
 \value{
 Numeric vector of estimated talent values.

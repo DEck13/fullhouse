@@ -5,7 +5,7 @@
 \alias{batters_adjusted}
 \title{Era-Adjusted Batters Season Dataset}
 \format{
-A data frame with 51135 rows and 19 variables:
+A data frame with 51656 rows and 19 variables:
 \itemize{
 \item name: a character vector containing the name of the player.
 \item playerID: the unique ID of the player.

@@ -15,13 +15,13 @@ A tibble with 155 observations of 3 variables:
 \source{
 See \href{https://eckeraadjustment.web.illinois.edu/MLB-talent-pool-v3.0.html}{this technical report}
 for details on how these estimates of the talent pool were constructed from
-1871 to 2025.
+1871 to 2025. For 2026, we temporarily set the talent pool as the 2025 value.
 }
 \usage{
 data(talentpool)
 }
 \description{
 This dataset contains the talent pool for the American League (AL) and
-National League (NL) from 1871 to 2025.
+National League (NL) from 1871 to 2026.
 }
 \keyword{datasets}

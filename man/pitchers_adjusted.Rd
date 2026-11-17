@@ -5,7 +5,7 @@
 \alias{pitchers_adjusted}
 \title{Era-Adjusted Pitchers Season Dataset}
 \format{
-A data frame with 33271 rows and 9 variables:
+A data frame with 34000 rows and 9 variables:
 \itemize{
 \item name: a character vector containing the name of the player.
 \item playerID: The unique ID of the player.
@@ -22,7 +22,7 @@ A data frame with 33271 rows and 9 variables:
 data(pitchers_adjusted)
 }
 \description{
-A dataset containing era-adjusted season statistics for pitchers up to 2025.
+A dataset containing era-adjusted season statistics for pitchers up to 2026.
 }
 \details{
 These era-adjusted statistics are obtained from Full House Modeling.
